@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>Ravsil</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="src/style.css">
+</head>
+
+<body class="bg-gray-100 h-screen flex flex-col">
+    <div class="flex-1 bg-blue-600" id="desktop">
+        <div class="w-12 h-[4.5rem] m-4 cursor-default">
+            <img src="src/trash.png" alt="Icon" draggable="false">
+            <p class="py-0.5 text-xs text-center text-white select-none">Lixeira</p>
+        </div>
+    </div>
+
+    <div class="bg-gray-800 text-white flex items-center md:order-last order-first">
+        <div class="p-4 hover:bg-gray-900 cursor-default md:block hidden">Start</div>
+        <div class="flex-1 md:block hidden"></div>
+        <div class="p-4" id="clock">Clock</div>
+    </div>
+
+    <script src="src/script.js"></script>
+</body>
+
+
+</html>
