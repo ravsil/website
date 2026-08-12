@@ -1,30 +1,367 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <title>Ravsil</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="src/style.css">
+    <link rel="icon" type="image/svg+xml" href="src/icon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@300;400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="src/css/desktop.css">
+    <link rel="stylesheet" href="src/css/mobile.css">
 </head>
 
-<body class="bg-gray-100 h-screen flex flex-col">
-    <div class="flex-1 bg-blue-600" id="desktop">
-        <div class="w-12 h-[4.5rem] m-4 cursor-default">
-            <img src="src/trash.png" alt="Icon" draggable="false">
-            <p class="py-0.5 text-xs text-center text-white select-none">Lixeira</p>
+<body>
+    <!-- desktop mode -->
+    <div id="desktop-mode">
+
+        <!-- desktop surface -->
+        <div id="desktop">
+            <div id="selection-box" class="hidden"></div>
+            <div class="desktop-icons">
+
+                <!-- lixeira -->
+                <div class="desktop-icon" data-app="recycle-bin">
+                    <div class="icon-img">
+                        <svg viewBox="0 0 48 48">
+                            <path d="M14 16h20v22a3 3 0 01-3 3H17a3 3 0 01-3-3V16z" fill="#4a90d9" />
+                            <rect x="11" y="12" width="26" height="2.5" rx="1.25" fill="#5ba0e0" />
+                            <path d="M19.5 12V10a2.5 2.5 0 012.5-2.5h4a2.5 2.5 0 012.5 2.5v2" stroke="#5ba0e0"
+                                stroke-width="1.5" fill="none" />
+                            <path d="M20.5 21v12M24 21v12M27.5 21v12" stroke="rgba(255,255,255,0.35)" stroke-width="1.2"
+                                stroke-linecap="round" />
+                        </svg>
+                    </div>
+                    <span class="icon-label">Lixeira</span>
+                </div>
+
+                <!-- este pc -->
+                <div class="desktop-icon" data-app="this-pc">
+                    <div class="icon-img">
+                        <svg viewBox="0 0 48 48">
+                            <rect x="6" y="8" width="36" height="24" rx="2.5" fill="#3a7bd5" />
+                            <rect x="9" y="11" width="30" height="18" rx="1.5" fill="#1a1a2e" />
+                            <path d="M18 35h12" stroke="#5ba0e0" stroke-width="2" stroke-linecap="round" />
+                            <path d="M24 32v3" stroke="#5ba0e0" stroke-width="2" stroke-linecap="round" />
+                            <rect x="16" y="37" width="16" height="2" rx="1" fill="#5ba0e0" />
+                        </svg>
+                    </div>
+                    <span class="icon-label">Este PC</span>
+                </div>
+
+                <!-- documentos -->
+                <div class="desktop-icon" data-app="documents">
+                    <div class="icon-img">
+                        <svg viewBox="0 0 48 48">
+                            <path d="M6 16a2 2 0 012-2h12l3 3h17a2 2 0 012 2v17a2 2 0 01-2 2H8a2 2 0 01-2-2V16z"
+                                fill="#e8a838" />
+                            <path d="M6 21h36v15a2 2 0 01-2 2H8a2 2 0 01-2-2V21z" fill="#ffc107" />
+                        </svg>
+                    </div>
+                    <span class="icon-label">Documentos</span>
+                </div>
+
+                <!-- markdown readme.md -->
+                <div class="desktop-icon" data-app="markdown-viewer" data-file="README.md">
+                    <div class="icon-img">
+                        <svg viewBox="0 0 48 48">
+                            <path d="M12 5h16l10 10v28a3 3 0 01-3 3H12a3 3 0 01-3-3V8a3 3 0 013-3z" fill="#5ba0e0" />
+                            <path d="M28 5v10a2 2 0 002 2h10" fill="#4a90d9" />
+                            <path d="M17 24h14M17 30h10" stroke="rgba(255,255,255,0.5)" stroke-width="2"
+                                stroke-linecap="round" />
+                        </svg>
+                    </div>
+                    <span class="icon-label">README.md</span>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- start menu -->
+        <div id="start-menu">
+            <div class="start-win7-container">
+                <!-- left panel: program list & search at bottom -->
+                <div class="start-left-panel">
+                    <div class="start-app-list" id="start-app-list">
+                        <!-- populated by js -->
+                    </div>
+                    <div class="start-search-bar">
+                        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="8.5" cy="8.5" r="5.5" />
+                            <path d="M12.5 12.5L17 17" stroke-linecap="round" />
+                        </svg>
+                        <input type="text" placeholder="Pesquisar programas e arquivos" id="start-search-input">
+                    </div>
+                </div>
+
+                <!-- right panel: user & system quick links -->
+                <div class="start-right-panel">
+                    <div class="start-user-header">
+                        <div class="start-avatar">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v2h20v-2c0-3.3-6.7-5-10-5z" />
+                            </svg>
+                        </div>
+                        <span class="start-user-name">Rafael</span>
+                    </div>
+
+                    <div class="start-right-divider"></div>
+
+                    <div class="start-sys-links">
+                        <div class="start-sys-item" data-app="documents">Documentos</div>
+                        <div class="start-sys-item" data-app="this-pc">Este PC</div>
+                        <div class="start-sys-item" data-app="recycle-bin">Lixeira</div>
+                    </div>
+
+                    <div class="start-power-footer">
+                        <button class="start-power-btn" id="start-power-btn" title="Desligar">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round">
+                                <path d="M12 3v6" />
+                                <circle cx="12" cy="13" r="8" fill="none" />
+                            </svg>
+                            <span>Desligar</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- context menu -->
+        <div id="context-menu" class="hidden">
+            <div class="ctx-item" data-action="view">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <rect x="3" y="3" width="14" height="14" rx="2" />
+                    <path d="M3 10h14" />
+                    <path d="M10 3v14" />
+                </svg>
+                <span>Exibir</span>
+                <span class="ctx-shortcut"></span>
+            </div>
+            <div class="ctx-item" data-action="sort">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M4 6h12M4 10h8M4 14h5" />
+                </svg>
+                <span>Classificar por</span>
+            </div>
+            <div class="ctx-divider"></div>
+            <div class="ctx-item" data-action="refresh">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M3 10a7 7 0 0113-3.5M17 10a7 7 0 01-13 3.5" />
+                    <path d="M16 3v4h-4M4 17v-4h4" />
+                </svg>
+                <span>Atualizar</span>
+            </div>
+            <div class="ctx-divider"></div>
+            <div class="ctx-item" data-action="new-folder">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M3 7a1 1 0 011-1h4l2 2h7a1 1 0 011 1v7a1 1 0 01-1 1H4a1 1 0 01-1-1V7z" />
+                    <path d="M10 10v4M8 12h4" />
+                </svg>
+                <span>Nova pasta</span>
+            </div>
+        </div>
+
+        <!-- taskbar -->
+        <div id="taskbar">
+            <div id="taskbar-center">
+                <!-- start button -->
+                <button class="taskbar-btn" id="start-btn" title="Iniciar">
+                    <svg viewBox="63 100 200 220">
+                        <defs>
+                            <linearGradient id="ravsil-btn-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#0078d4" />
+                                <stop offset="100%" stop-color="#60cdff" />
+                            </linearGradient>
+                        </defs>
+                        <g fill="url(#ravsil-btn-grad)">
+                            <path
+                                d="M 75.178 103.992 L 240.841 103.992 L 201.009 144.276 L 115.462 144.277 L 75.178 103.992 Z"
+                                opacity="0.95" />
+                            <path
+                                d="M 67.031 111.687 L 67.031 237.97 L 108.673 194.066 L 109.125 153.781 L 67.031 111.687 Z"
+                                opacity="0.85" />
+                            <path
+                                d="M 124.515 191.802 L 180.189 192.255 L 67.031 317.181 L 67.031 254.265 L 124.515 191.802 Z"
+                                opacity="0.9" />
+                            <path
+                                d="M 208.25 153.329 L 208.702 176.412 L 150.31 241.593 L 206.441 315.373 L 258.968 314.916 L 202.367 242.043 L 249.895 193.613 L 249.442 113.041 L 208.25 153.329 Z" />
+                        </g>
+                    </svg>
+                </button>
+                <!-- file explorer -->
+                <button class="taskbar-btn" id="tb-explorer" title="Explorador de Arquivos" data-app="documents">
+                    <svg viewBox="0 0 20 20">
+                        <path
+                            d="M2 7a1.5 1.5 0 011.5-1.5h5L10 7h7.5A1.5 1.5 0 0119 8.5v7A1.5 1.5 0 0117.5 17h-14A1.5 1.5 0 012 15.5V7z"
+                            fill="#e8a838" />
+                        <path d="M2 9.5h17v6A1.5 1.5 0 0117.5 17h-14A1.5 1.5 0 012 15.5V9.5z" fill="#ffc107" />
+                    </svg>
+                </button>
+                <!-- active apps go here -->
+                <div id="taskbar-active"></div>
+            </div>
+
+            <!-- system tray -->
+            <div id="system-tray">
+                <div class="tray-group">
+                    <!-- wifi -->
+                    <svg viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10 16a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
+                        <path d="M6.3 12.3a5.2 5.2 0 017.4 0" fill="none" stroke="currentColor" stroke-width="1.5"
+                            stroke-linecap="round" />
+                        <path d="M3.5 9.5a9 9 0 0113 0" fill="none" stroke="currentColor" stroke-width="1.5"
+                            stroke-linecap="round" />
+                    </svg>
+                    <!-- volume -->
+                    <svg viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M3 8h2l4-3v10l-4-3H3a1 1 0 01-1-1V9a1 1 0 011-1z" />
+                        <path d="M13 7.5a4 4 0 010 5" fill="none" stroke="currentColor" stroke-width="1.5"
+                            stroke-linecap="round" />
+                        <path d="M15 5.5a7 7 0 010 9" fill="none" stroke="currentColor" stroke-width="1.5"
+                            stroke-linecap="round" />
+                    </svg>
+                    <!-- battery -->
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.3">
+                        <rect x="2" y="6" width="14" height="8" rx="1.5" />
+                        <path d="M18 9v2" stroke-linecap="round" stroke-width="1.5" />
+                        <rect x="3.5" y="7.5" width="9" height="5" rx="0.5" fill="#4ec9b0" stroke="none" />
+                    </svg>
+                </div>
+                <div id="tray-clock">
+                    <span id="tray-time">00:00</span>
+                    <span id="tray-date">01/01/2026</span>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="bg-gray-800 text-white flex items-center md:order-last order-first">
-        <div class="p-4 hover:bg-gray-900 cursor-default md:block hidden">Start</div>
-        <div class="flex-1 md:block hidden"></div>
-        <div class="p-4" id="clock">Clock</div>
+    <!-- mobile mode -->
+    <div id="mobile-mode">
+
+        <!-- status bar -->
+        <div id="status-bar">
+            <span id="status-time">00:00</span>
+            <div class="status-icons">
+                <!-- signal -->
+                <svg viewBox="0 0 20 20" fill="currentColor">
+                    <rect x="1" y="14" width="3" height="4" rx="0.5" />
+                    <rect x="6" y="10" width="3" height="8" rx="0.5" />
+                    <rect x="11" y="6" width="3" height="12" rx="0.5" />
+                    <rect x="16" y="2" width="3" height="16" rx="0.5" />
+                </svg>
+                <!-- wifi -->
+                <svg viewBox="0 0 20 20" fill="currentColor">
+                    <circle cx="10" cy="16" r="1.5" />
+                    <path d="M6.5 12.5a5 5 0 017 0" fill="none" stroke="currentColor" stroke-width="1.5"
+                        stroke-linecap="round" />
+                    <path d="M3.5 9.5a9 9 0 0113 0" fill="none" stroke="currentColor" stroke-width="1.5"
+                        stroke-linecap="round" />
+                </svg>
+                <!-- battery -->
+                <svg viewBox="0 0 20 20" fill="none">
+                    <rect x="4" y="2" width="12" height="16" rx="2" stroke="currentColor" stroke-width="1.3" />
+                    <rect x="7" y="0.5" width="6" height="2" rx="1" fill="currentColor" />
+                    <rect x="5.5" y="6" width="9" height="10.5" rx="1" fill="currentColor" />
+                </svg>
+            </div>
+        </div>
+
+        <!-- home screen -->
+        <div id="home-screen">
+            <!-- search widget -->
+            <div id="search-widget">
+                <svg class="g-logo" viewBox="0 0 48 48">
+                    <path
+                        d="M23.5 11c-7 0-12.7 5.7-12.7 12.7s5.7 12.7 12.7 12.7c3.2 0 6.2-1.2 8.5-3.2l8.7 8.7 3.1-3.1-8.5-8.5c2.3-2.5 3.7-5.8 3.7-9.5C39 16.8 33.2 11 26.2 11h-2.7z"
+                        fill="none" />
+                    <circle cx="24" cy="24" r="11" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2.5" />
+                    <text x="24" y="29" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="16"
+                        font-weight="500" font-family="Roboto,sans-serif">G</text>
+                </svg>
+                <span class="search-text">Pesquisar...</span>
+                <svg class="search-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round">
+                    <rect x="9" y="2" width="6" height="11" rx="3" />
+                    <path d="M5 11a7 7 0 0014 0" />
+                    <path d="M12 18v4" />
+                </svg>
+            </div>
+
+            <!-- app grid -->
+            <div id="app-grid">
+                <!-- populated by js -->
+            </div>
+        </div>
+
+        <!-- dock -->
+        <div id="dock">
+            <!-- populated by js -->
+        </div>
+
+        <!-- mobile app screen view -->
+        <div id="mobile-app-screen">
+            <div class="mobile-app-header">
+                <button class="mobile-back-btn" id="mobile-back-btn" title="Voltar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round">
+                        <path d="M19 12H5M12 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <span class="mobile-app-title" id="mobile-app-title">App</span>
+            </div>
+            <div class="mobile-app-body" id="mobile-app-body">
+                <!-- filled dynamically by js -->
+            </div>
+        </div>
+
+        <!-- navigation bar -->
+        <div id="nav-bar">
+            <button class="nav-btn" id="nav-back-btn" title="Voltar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><polygon points="17,5 7,12 17,19"/></svg>
+            </button>
+            <button class="nav-btn" id="nav-home-btn" title="Início">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="6.5"/></svg>
+            </button>
+            <button class="nav-btn" id="nav-recents-btn" title="Recentes">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5.5" y="5.5" width="13" height="13" rx="1.5"/></svg>
+            </button>
+        </div>
+
+        <!-- mobile welcome popup modal -->
+        <div id="mobile-welcome-modal" class="hidden">
+            <div class="mwm-backdrop"></div>
+            <div class="mwm-card">
+                <div class="mwm-header">
+                    <div class="mwm-icon">
+                        <svg viewBox="0 0 40 40">
+                            <path d="M10 4h14l8 8v22a2 2 0 01-2 2H10a2 2 0 01-2-2V6a2 2 0 012-2z" fill="#5ba0e0" />
+                            <path d="M24 4v6a2 2 0 002 2h6" fill="#4a90d9" />
+                            <path d="M14 20h12M14 25h8" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"
+                                stroke-linecap="round" />
+                        </svg>
+                    </div>
+                    <span class="mwm-title">README.md</span>
+                </div>
+                <div class="mwm-body markdown-body" id="mwm-body">
+                    <!-- populated by js -->
+                </div>
+                <div class="mwm-footer">
+                    <button class="mwm-ok-btn" id="mwm-ok-btn">OK</button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <script src="src/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="src/js/data.js"></script>
+    <script src="src/js/windows.js"></script>
+    <script src="src/js/shell.js"></script>
 </body>
-
 
 </html>

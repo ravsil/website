@@ -1,0 +1,1236 @@
+/* 1. fonts & css variables */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@300;400;500&display=swap');
+
+:root {
+    /* windows 11 */
+    --win-acrylic: rgba(32, 32, 32, 0.8);
+    --win-acrylic-border: rgba(255, 255, 255, 0.08);
+    --win-acrylic-hover: rgba(255, 255, 255, 0.06);
+    --win-accent: #60cdff;
+    --win-accent-dark: #0078d4;
+    --win-text: #ffffff;
+    --win-text-dim: rgba(255, 255, 255, 0.55);
+    --win-surface: #2d2d2d;
+    --win-window-bg: #1e1e1e;
+    --win-window-header: #2d2d2d;
+    --win-close-hover: #c42b1c;
+    --win-taskbar-h: 3rem;
+    --win-r: 0.5rem;
+    --win-r-lg: 0.75rem;
+
+    /* shared typography & easing */
+    --font-win: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    --ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-out: cubic-bezier(0, 0, 0.2, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 2. reset & base */
+
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: var(--font-win);
+    user-select: none;
+    -webkit-user-select: none;
+    background: #000;
+}
+
+.hidden {
+    display: none !important;
+}
+
+button {
+    border: none;
+    background: none;
+    cursor: default;
+    font-family: inherit;
+    color: inherit;
+}
+
+input {
+    font-family: inherit;
+}
+
+/* 3. desktop mode — windows 11 */
+
+#desktop-mode {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* 3.1 desktop area */
+#desktop {
+    flex: 1;
+    position: relative;
+    background:
+        radial-gradient(ellipse at 30% 70%, rgba(0, 120, 212, 0.55) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 30%, rgba(107, 79, 162, 0.45) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 90%, rgba(0, 90, 158, 0.35) 0%, transparent 40%),
+        radial-gradient(ellipse at 80% 80%, rgba(96, 205, 255, 0.12) 0%, transparent 30%),
+        linear-gradient(180deg, #0a1628 0%, #001a3a 40%, #0d1117 100%);
+    overflow: hidden;
+}
+
+/* blue rectangle */
+#selection-box {
+    position: absolute;
+    background: rgba(0, 120, 212, 0.25);
+    border: 0.0625rem solid rgba(96, 205, 255, 0.7);
+    border-radius: 0.125rem;
+    pointer-events: none;
+    z-index: 5;
+}
+
+/* 3.2 desktop icons */
+.desktop-icons {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.desktop-icon {
+    position: absolute;
+    pointer-events: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    width: 5rem;
+    height: 5.625rem;
+    padding: 0.5rem 0.25rem 0.375rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: background 100ms var(--ease);
+    text-align: center;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.desktop-icon:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.desktop-icon.selected {
+    background: rgba(255, 255, 255, 0.1);
+    outline: 0.0625rem solid rgba(255, 255, 255, 0.14);
+}
+
+.desktop-icon .icon-img {
+    width: 2.875rem;
+    height: 2.875rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.25rem;
+    pointer-events: none;
+}
+
+.desktop-icon .icon-img svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 0.125rem 0.25rem rgba(0, 0, 0, 0.45));
+}
+
+.desktop-icon .icon-label {
+    font-size: 0.6875rem;
+    color: #fff;
+    text-shadow: 0 0.0625rem 0.25rem rgba(0, 0, 0, 0.8), 0 0 0.125rem rgba(0, 0, 0, 0.5);
+    line-height: 1.25;
+    max-width: 4.625rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 3.3 taskbar */
+#taskbar {
+    height: var(--win-taskbar-h);
+    background: var(--win-acrylic);
+    backdrop-filter: blur(1.875rem) saturate(180%);
+    -webkit-backdrop-filter: blur(1.875rem) saturate(180%);
+    border-top: 0.0625rem solid var(--win-acrylic-border);
+    display: flex;
+    align-items: center;
+    padding: 0 0.5rem;
+    z-index: 500;
+    position: relative;
+}
+
+#taskbar-center {
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+    margin: 0;
+}
+
+.taskbar-btn {
+    width: 2.5rem;
+    height: 2.375rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--win-r);
+    color: var(--win-text);
+    transition: background 100ms var(--ease);
+    position: relative;
+}
+
+.taskbar-btn:hover {
+    background: var(--win-acrylic-hover);
+}
+
+.taskbar-btn svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    pointer-events: none;
+}
+
+.taskbar-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0.125rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1rem;
+    height: 0.1875rem;
+    background: var(--win-accent);
+    border-radius: 0.125rem;
+    animation: indicatorIn 200ms var(--ease-out);
+}
+
+@keyframes indicatorIn {
+    from {
+        width: 0;
+        opacity: 0;
+    }
+
+    to {
+        width: 1rem;
+        opacity: 1;
+    }
+}
+
+#start-btn {
+    width: 2.75rem;
+    height: 2.375rem;
+}
+
+#start-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+#start-btn svg {
+    width: 1.125rem;
+    height: 1.125rem;
+}
+
+/* system tray */
+#system-tray {
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+    margin-left: auto;
+    position: absolute;
+    right: 0.5rem;
+}
+
+.tray-group {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.625rem;
+    border-radius: var(--win-r);
+    cursor: default;
+    transition: background 100ms var(--ease);
+}
+
+.tray-group:hover {
+    background: var(--win-acrylic-hover);
+}
+
+.tray-group svg {
+    width: 0.875rem;
+    height: 0.875rem;
+    color: var(--win-text);
+    opacity: 0.85;
+}
+
+#tray-clock {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--win-r);
+    cursor: default;
+    transition: background 100ms var(--ease);
+    line-height: 1.25;
+}
+
+#tray-clock:hover {
+    background: var(--win-acrylic-hover);
+}
+
+#tray-time {
+    font-size: 0.75rem;
+    color: var(--win-text);
+    font-weight: 400;
+}
+
+#tray-date {
+    font-size: 0.6875rem;
+    color: var(--win-text);
+    opacity: 0.85;
+}
+
+#taskbar-active {
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+}
+
+/* 3.4 start menu */
+#start-menu {
+    position: fixed;
+    bottom: calc(var(--win-taskbar-h) + 0.625rem);
+    left: 0.75rem;
+    transform: translateY(1.25rem);
+    width: 32.5rem;
+    max-width: calc(100vw - 1.5rem);
+    height: 30rem;
+    background: rgba(28, 28, 32, 0.94);
+    backdrop-filter: blur(3.125rem) saturate(180%);
+    -webkit-backdrop-filter: blur(3.125rem) saturate(180%);
+    border: 0.0625rem solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--win-r-lg);
+    box-shadow:
+        0 1.5rem 5rem rgba(0, 0, 0, 0.6),
+        0 0 0 0.0625rem rgba(255, 255, 255, 0.05);
+    z-index: 400;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 180ms var(--ease), transform 180ms var(--ease);
+    overflow: hidden;
+}
+
+#start-menu.open {
+    opacity: 1;
+    pointer-events: all;
+    transform: translateY(0);
+}
+
+.start-win7-container {
+    display: flex;
+    height: 100%;
+    width: 100%;
+}
+
+.start-left-panel {
+    flex: 1.35;
+    display: flex;
+    flex-direction: column;
+    padding: 0.75rem 0.625rem 0.625rem 0.75rem;
+    background: rgba(255, 255, 255, 0.02);
+    min-width: 0;
+}
+
+.start-app-list {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+}
+
+.start-app-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.625rem;
+    border-radius: 0.375rem;
+    cursor: default;
+    transition: background 100ms var(--ease);
+}
+
+.start-app-row:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.start-app-row .sar-icon {
+    width: 1.75rem;
+    height: 1.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.start-app-row .sar-icon svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.start-app-row span {
+    font-size: 0.8125rem;
+    color: var(--win-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.start-all-programs {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    margin: 0.375rem 0;
+    border-top: 0.0625rem solid rgba(255, 255, 255, 0.06);
+    border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.06);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--win-text);
+    cursor: default;
+    border-radius: 0.25rem;
+    transition: background 100ms;
+}
+
+.start-all-programs:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.start-all-programs svg {
+    width: 0.75rem;
+    height: 0.75rem;
+    opacity: 0.6;
+}
+
+.start-search-bar {
+    position: relative;
+    margin-top: auto;
+}
+
+.start-search-bar input {
+    width: 100%;
+    padding: 0.5rem 0.75rem 0.5rem 2.125rem;
+    border-radius: 0.375rem;
+    border: 0.0625rem solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.25);
+    color: var(--win-text);
+    font-size: 0.75rem;
+    outline: none;
+    transition: border-color 150ms, background 150ms;
+}
+
+.start-search-bar input::placeholder {
+    color: var(--win-text-dim);
+}
+
+.start-search-bar input:focus {
+    border-color: var(--win-accent);
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.start-search-bar svg {
+    position: absolute;
+    left: 0.625rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0.875rem;
+    height: 0.875rem;
+    color: var(--win-text-dim);
+    pointer-events: none;
+}
+
+.start-right-panel {
+    width: 12.1875rem;
+    background: rgba(0, 0, 0, 0.22);
+    border-left: 0.0625rem solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    flex-direction: column;
+    padding: 0.875rem 0.75rem;
+    flex-shrink: 0;
+}
+
+.start-user-header {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.25rem 0.375rem 0.625rem;
+}
+
+.start-avatar {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0078d4, #60cdff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.3);
+}
+
+.start-avatar svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: white;
+}
+
+.start-user-name {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--win-text);
+}
+
+.start-right-divider {
+    height: 0.0625rem;
+    background: rgba(255, 255, 255, 0.07);
+    margin: 0.375rem 0;
+}
+
+.start-sys-links {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+}
+
+.start-sys-item {
+    padding: 0.4375rem 0.625rem;
+    border-radius: 0.3125rem;
+    font-size: 0.75rem;
+    color: var(--win-text-dim);
+    cursor: default;
+    transition: background 100ms, color 100ms;
+}
+
+.start-sys-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--win-text);
+}
+
+.start-power-footer {
+    margin-top: auto;
+    padding-top: 0.625rem;
+}
+
+.start-power-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    background: rgba(255, 255, 255, 0.06);
+    border: 0.0625rem solid rgba(255, 255, 255, 0.08);
+    color: var(--win-text);
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: default;
+    transition: background 100ms;
+}
+
+.start-power-btn:hover {
+    background: rgba(196, 43, 28, 0.85);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.start-power-btn svg {
+    width: 0.875rem;
+    height: 0.875rem;
+}
+
+/* 3.5 app windows */
+.app-window {
+    position: absolute;
+    background: var(--win-window-bg);
+    border-radius: var(--win-r-lg);
+    border: 0.0625rem solid rgba(255, 255, 255, 0.07);
+    box-shadow: 0 0.75rem 3rem rgba(0, 0, 0, 0.55), 0 0 0 0.0625rem rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    min-width: 23.75rem;
+    min-height: 16.25rem;
+    overflow: hidden;
+    animation: windowOpen 250ms var(--ease-out) forwards;
+    transition: top 0ms, left 0ms, width 0ms, height 0ms;
+}
+
+.app-window.maximized {
+    transition: all 200ms var(--ease);
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: calc(100vh - var(--win-taskbar-h)) !important;
+    border-radius: 0;
+    border: none;
+}
+
+@keyframes windowOpen {
+    from {
+        opacity: 0;
+        transform: scale(0.88);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.app-window.closing {
+    animation: windowClose 150ms var(--ease) forwards;
+    pointer-events: none;
+}
+
+@keyframes windowClose {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: scale(0.92);
+    }
+}
+
+/* window resize handles */
+.win-resize-handle {
+    position: absolute;
+    z-index: 100;
+}
+
+.app-window.maximized .win-resize-handle {
+    display: none !important;
+}
+
+.handle-n {
+    top: 0;
+    left: 0.75rem;
+    right: 0.75rem;
+    height: 0.375rem;
+    cursor: ns-resize;
+}
+
+.handle-s {
+    bottom: 0;
+    left: 0.75rem;
+    right: 0.75rem;
+    height: 0.375rem;
+    cursor: ns-resize;
+}
+
+.handle-e {
+    right: 0;
+    top: 0.75rem;
+    bottom: 0.75rem;
+    width: 0.375rem;
+    cursor: ew-resize;
+}
+
+.handle-w {
+    left: 0;
+    top: 0.75rem;
+    bottom: 0.75rem;
+    width: 0.375rem;
+    cursor: ew-resize;
+}
+
+.handle-nw {
+    top: 0;
+    left: 0;
+    width: 0.75rem;
+    height: 0.75rem;
+    cursor: nwse-resize;
+}
+
+.handle-ne {
+    top: 0;
+    right: 0;
+    width: 0.75rem;
+    height: 0.75rem;
+    cursor: nesw-resize;
+}
+
+.handle-se {
+    bottom: 0;
+    right: 0;
+    width: 0.75rem;
+    height: 0.75rem;
+    cursor: nwse-resize;
+}
+
+.handle-sw {
+    bottom: 0;
+    left: 0;
+    width: 0.75rem;
+    height: 0.75rem;
+    cursor: nesw-resize;
+}
+
+.window-header {
+    height: 2.375rem;
+    background: var(--win-window-header);
+    display: flex;
+    align-items: center;
+    padding-left: 0.875rem;
+    cursor: default;
+    flex-shrink: 0;
+}
+
+.window-icon {
+    width: 1rem;
+    height: 1rem;
+    margin-right: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.window-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.window-title {
+    font-size: 0.75rem;
+    color: var(--win-text);
+    opacity: 0.75;
+    flex: 1;
+    pointer-events: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.window-controls {
+    display: flex;
+    height: 100%;
+}
+
+.win-ctrl {
+    width: 2.875rem;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--win-text);
+    transition: background 80ms;
+}
+
+.win-ctrl:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.win-ctrl.close-btn {
+    border-radius: 0 var(--win-r-lg) 0 0;
+}
+
+.win-ctrl.close-btn:hover {
+    background: var(--win-close-hover);
+}
+
+.win-ctrl svg {
+    width: 0.625rem;
+    height: 0.625rem;
+}
+
+.window-body {
+    flex: 1;
+    overflow: auto;
+    background: var(--win-window-bg);
+    color: var(--win-text);
+    font-size: 0.8125rem;
+}
+
+/* window content variants */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--win-text-dim);
+    gap: 0.75rem;
+}
+
+.empty-state svg {
+    width: 3.5rem;
+    height: 3.5rem;
+    opacity: 0.25;
+}
+
+.empty-state p {
+    font-size: 0.8125rem;
+}
+
+/* explorer toolbar */
+.explorer-toolbar {
+    display: flex;
+    align-items: center;
+    padding: 0.375rem 0.625rem;
+    gap: 0.375rem;
+    border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.explorer-nav {
+    display: flex;
+    gap: 0.125rem;
+}
+
+.explorer-nav button {
+    width: 1.75rem;
+    height: 1.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.25rem;
+    color: var(--win-text-dim);
+    transition: background 80ms;
+}
+
+.explorer-nav button:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.explorer-nav svg {
+    width: 0.75rem;
+    height: 0.75rem;
+}
+
+.explorer-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    flex: 1;
+    padding: 0.3125rem 0.875rem;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 0.25rem;
+    border: 0.0625rem solid rgba(255, 255, 255, 0.06);
+    font-size: 0.75rem;
+    color: var(--win-text);
+    opacity: 0.7;
+}
+
+.explorer-breadcrumb svg {
+    width: 0.875rem;
+    height: 0.875rem;
+    opacity: 0.5;
+    flex-shrink: 0;
+}
+
+.file-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
+    gap: 0.25rem;
+    padding: 0.75rem;
+}
+
+.file-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.5rem 0.25rem;
+    border-radius: 0.375rem;
+    cursor: default;
+    transition: background 80ms;
+}
+
+.file-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.file-item svg {
+    width: 2.375rem;
+    height: 2.375rem;
+    margin-bottom: 0.25rem;
+}
+
+.file-item span {
+    font-size: 0.6875rem;
+    color: var(--win-text);
+    text-align: center;
+    word-break: break-word;
+    line-height: 1.3;
+}
+
+/* este pc system hardware specs */
+.sys-info-container {
+    padding: 1rem 1.5rem 1.75rem;
+}
+
+.sys-hardware-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(18.125rem, 1fr));
+    gap: 0.75rem;
+    padding: 0.375rem 0 0;
+}
+
+.sys-hw-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.125rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 0.0625rem solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--win-r-lg);
+    box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.2);
+    transition: background 150ms var(--ease), border-color 150ms var(--ease), transform 150ms var(--ease);
+}
+
+.sys-hw-card:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(96, 205, 255, 0.3);
+    transform: translateY(-0.0625rem);
+}
+
+.hw-icon {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 0.625rem;
+    background: rgba(96, 205, 255, 0.12);
+    border: 0.0625rem solid rgba(96, 205, 255, 0.2);
+    color: var(--win-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.hw-icon svg {
+    width: 1.375rem;
+    height: 1.375rem;
+}
+
+.hw-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1875rem;
+    min-width: 0;
+}
+
+.hw-label {
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03125rem;
+    color: var(--win-text-dim);
+}
+
+.hw-val {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--win-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.drive-section-title {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--win-text);
+    padding: 0.5rem 0 0.75rem;
+    opacity: 0.85;
+}
+
+.drive-list {
+    padding: 0 1rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.drive-item {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    padding: 0.75rem 0.875rem;
+    border-radius: var(--win-r);
+    transition: background 80ms;
+    cursor: default;
+}
+
+.drive-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.drive-icon svg {
+    width: 2.25rem;
+    height: 2.25rem;
+}
+
+.drive-info {
+    flex: 1;
+}
+
+.drive-name {
+    font-size: 0.8125rem;
+    color: var(--win-text);
+    margin-bottom: 0.375rem;
+}
+
+.drive-bar {
+    height: 0.3125rem;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 0.1875rem;
+    overflow: hidden;
+}
+
+.drive-bar-fill {
+    height: 100%;
+    border-radius: 0.1875rem;
+    transition: width 600ms var(--ease-out);
+}
+
+.drive-space {
+    font-size: 0.6875rem;
+    color: var(--win-text-dim);
+    margin-top: 0.25rem;
+}
+
+/* 3.6 context menu */
+#context-menu {
+    position: fixed;
+    min-width: 13.75rem;
+    background: rgba(36, 36, 36, 0.94);
+    backdrop-filter: blur(2.5rem) saturate(200%);
+    -webkit-backdrop-filter: blur(2.5rem) saturate(200%);
+    border: 0.0625rem solid rgba(255, 255, 255, 0.07);
+    border-radius: var(--win-r-lg);
+    box-shadow: 0 0.75rem 3rem rgba(0, 0, 0, 0.5);
+    padding: 0.25rem;
+    z-index: 600;
+    animation: ctxOpen 100ms var(--ease-out);
+}
+
+@keyframes ctxOpen {
+    from {
+        opacity: 0;
+        transform: scale(0.96);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.ctx-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.4375rem 0.875rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    color: var(--win-text);
+    cursor: default;
+    transition: background 60ms;
+}
+
+.ctx-item:hover {
+    background: var(--win-acrylic-hover);
+}
+
+.ctx-item svg {
+    width: 0.875rem;
+    height: 0.875rem;
+    opacity: 0.65;
+}
+
+.ctx-item .ctx-shortcut {
+    margin-left: auto;
+    font-size: 0.6875rem;
+    color: var(--win-text-dim);
+}
+
+.ctx-divider {
+    height: 0.0625rem;
+    background: rgba(255, 255, 255, 0.07);
+    margin: 0.25rem 0.625rem;
+}
+
+/* markdown viewer layout & typography */
+.md-viewer-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.md-content-pane {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.25rem 1.75rem;
+    background: #18181c;
+}
+
+.markdown-body {
+    color: #e0e0e6;
+    font-size: 0.875rem;
+    line-height: 1.65;
+}
+
+.markdown-body h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.12);
+}
+
+.markdown-body h2 {
+    font-size: 1.1875rem;
+    font-weight: 600;
+    color: var(--win-accent);
+    margin: 1.5rem 0 0.75rem;
+}
+
+.markdown-body h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    margin: 1.25rem 0 0.5rem;
+}
+
+.markdown-body a,
+a {
+    color: #4da6ff;
+    text-decoration: underline;
+    text-underline-offset: 0.2rem;
+    transition: color 150ms var(--ease);
+}
+
+.markdown-body a:hover,
+a:hover {
+    color: #80c1ff;
+    text-decoration: underline;
+}
+
+.markdown-body p {
+    margin-bottom: 1rem;
+}
+
+.markdown-body hr {
+    height: 0.0625rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    margin: 1.25rem 0;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.markdown-body li {
+    margin-bottom: 0.375rem;
+}
+
+.markdown-body blockquote {
+    padding: 0.5rem 1rem;
+    margin: 1rem 0;
+    background: rgba(96, 205, 255, 0.08);
+    border-left: 0.25rem solid var(--win-accent);
+    border-radius: 0.25rem;
+    color: rgba(255, 255, 255, 0.88);
+}
+
+.markdown-body blockquote p:last-child {
+    margin-bottom: 0;
+}
+
+.markdown-body code {
+    font-family: 'Cascadia Code', 'Consolas', monospace;
+    font-size: 0.8125rem;
+    background: rgba(255, 255, 255, 0.08);
+    color: #60cdff;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+}
+
+.markdown-body pre {
+    background: #0f0f13;
+    border: 0.0625rem solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+}
+
+.markdown-body pre code {
+    background: none;
+    padding: 0;
+    color: #dcdcaa;
+}
+
+.markdown-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.8125rem;
+}
+
+.markdown-body th,
+.markdown-body td {
+    padding: 0.625rem 0.875rem;
+    border: 0.0625rem solid rgba(255, 255, 255, 0.1);
+    text-align: left;
+}
+
+.markdown-body th {
+    background: rgba(255, 255, 255, 0.06);
+    font-weight: 600;
+    color: #fff;
+}
+
+.markdown-body tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* custom scrollbars */
+::-webkit-scrollbar {
+    width: 0.375rem;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 0.1875rem;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.22);
+}
+
+/* responsive breakpoints */
+@media (max-width: 47.9375rem) {
+    #desktop-mode {
+        display: none !important;
+    }
+}
+
+@media (min-width: 48rem) {
+    #desktop-mode {
+        display: flex !important;
+    }
+}
