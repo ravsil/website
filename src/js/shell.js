@@ -26,7 +26,7 @@ function populateStartMenu() {
     if (!list) return;
 
     list.innerHTML = START_PROGRAMS.map(app => `
-        <div class="start-app-row" data-app="${app.id}">
+        <div class="start-app-row" data-app="${app.id}" ${app.file ? `data-file="${app.file}"` : ''}>
             <div class="sar-icon">${ICONS[app.id] || ''}</div>
             <span>${app.name}</span>
         </div>
@@ -36,8 +36,9 @@ function populateStartMenu() {
     list.querySelectorAll('.start-app-row').forEach(row => {
         row.addEventListener('click', () => {
             const appId = row.dataset.app;
+            const targetFile = row.dataset.file;
             if (appId) {
-                openApp(appId);
+                openApp(appId, targetFile);
                 startMenu?.classList.remove('open');
             }
         });
@@ -47,8 +48,9 @@ function populateStartMenu() {
     document.querySelectorAll('.start-sys-item[data-app]').forEach(item => {
         item.addEventListener('click', () => {
             const appId = item.dataset.app;
+            const targetFile = item.dataset.file;
             if (appId) {
-                openApp(appId);
+                openApp(appId, targetFile);
                 startMenu?.classList.remove('open');
             }
         });
@@ -403,12 +405,15 @@ document.querySelectorAll('#taskbar-center .taskbar-btn[data-app]').forEach(btn 
 });
 
 // ------ mobile ui ------
+let mobileNavStack = [];
+let currentMobileState = null;
+
 function populateMobileUI() {
     // app grid (first 16 apps)
     const grid = document.getElementById('app-grid');
     if (grid) {
         grid.innerHTML = MOBILE_APPS.slice(0, 16).map(app => `
-            <div class="mobile-app" data-app="${app.id}">
+            <div class="mobile-app" data-app="${app.id}" ${app.file ? `data-file="${app.file}"` : ''}>
                 <div class="app-icon-wrap">
                     ${app.icon}
                 </div>
@@ -423,7 +428,7 @@ function populateMobileUI() {
         dock.innerHTML = DOCK_APPS.map(id => {
             const app = MOBILE_APPS.find(a => a.id === id);
             if (!app) return '';
-            return `<div class="dock-app" data-app="${app.id}" title="${app.name}">${app.icon}</div>`;
+            return `<div class="dock-app" data-app="${app.id}" ${app.file ? `data-file="${app.file}"` : ''} title="${app.name}">${app.icon}</div>`;
         }).join('');
     }
 
@@ -431,15 +436,18 @@ function populateMobileUI() {
     document.querySelectorAll('.mobile-app, .dock-app').forEach(app => {
         app.addEventListener('click', () => {
             const appId = app.dataset.app;
+            const targetFile = app.dataset.file;
             if (appId) {
-                openMobileApp(appId);
+                mobileNavStack = [];
+                currentMobileState = null;
+                openMobileApp(appId, targetFile, false);
             }
         });
     });
 }
 populateMobileUI();
 
-function openMobileApp(appId, targetFile) {
+function openMobileApp(appId, targetFile, pushCurrentToStack = false, initialFolder = 'root') {
     const screen = document.getElementById('mobile-app-screen');
     const titleEl = document.getElementById('mobile-app-title');
     const bodyEl = document.getElementById('mobile-app-body');
@@ -450,39 +458,67 @@ function openMobileApp(appId, targetFile) {
     const config = APP_CONFIGS[appId];
     if (!config) return;
 
+    if (pushCurrentToStack && currentMobileState) {
+        const savedFolder = bodyEl.getCurrentFolder ? bodyEl.getCurrentFolder() : 'root';
+        mobileNavStack.push({
+            ...currentMobileState,
+            folder: savedFolder
+        });
+    }
+
+    currentMobileState = { appId, targetFile, folder: initialFolder };
+
     if (titleEl) {
         titleEl.textContent = targetFile || config.title;
     }
 
     bodyEl.innerHTML = config.content();
+    bodyEl.getCurrentFolder = null;
+    bodyEl.navigateBackInExplorer = null;
 
-    bodyEl.querySelectorAll('.md-file-open').forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const mdFile = item.dataset.file;
-            openMobileApp('markdown-viewer', mdFile);
-        });
-    });
+    if (appId === 'projects') {
+        initProjectsExplorer(bodyEl, true, initialFolder);
+    } else {
+        bindExplorerFileClicks(bodyEl, true);
+    }
 
     if (appId === 'markdown-viewer') {
-        initMarkdownViewerListeners(screen, targetFile || 'README.md', true);
+        initMarkdownViewerListeners(screen, targetFile || 'README.md');
     }
 
     screen.classList.add('open');
     document.getElementById('mobile-mode')?.classList.add('app-open');
 
     if (backBtn) {
-        backBtn.onclick = closeMobileScreen;
+        backBtn.onclick = handleMobileBack;
     }
 }
 
 // android navigation buttons
 const closeMobileScreen = () => {
+    mobileNavStack = [];
+    currentMobileState = null;
     document.getElementById('mobile-app-screen')?.classList.remove('open');
     document.getElementById('mobile-mode')?.classList.remove('app-open');
 };
 
-document.getElementById('nav-back-btn')?.addEventListener('click', closeMobileScreen);
+function handleMobileBack() {
+    const bodyEl = document.getElementById('mobile-app-body');
+    if (bodyEl && typeof bodyEl.navigateBackInExplorer === 'function') {
+        if (bodyEl.navigateBackInExplorer()) {
+            return;
+        }
+    }
+    if (mobileNavStack.length > 0) {
+        const prev = mobileNavStack.pop();
+        currentMobileState = null;
+        openMobileApp(prev.appId, prev.targetFile, false, prev.folder || 'root');
+        return;
+    }
+    closeMobileScreen();
+}
+
+document.getElementById('nav-back-btn')?.addEventListener('click', handleMobileBack);
 document.getElementById('nav-home-btn')?.addEventListener('click', closeMobileScreen);
 document.getElementById('nav-recents-btn')?.addEventListener('click', closeMobileScreen);
 

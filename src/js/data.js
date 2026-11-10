@@ -2,7 +2,8 @@
 const ICONS = {
     'recycle-bin': `<svg viewBox="0 0 48 48"><path d="M14 16h20v22a3 3 0 01-3 3H17a3 3 0 01-3-3V16z" fill="#4a90d9"/><rect x="11" y="12" width="26" height="2.5" rx="1.25" fill="#5ba0e0"/><path d="M20.5 21v12M24 21v12M27.5 21v12" stroke="rgba(255,255,255,0.35)" stroke-width="1.2" stroke-linecap="round"/></svg>`,
     'this-pc': `<svg viewBox="0 0 48 48"><rect x="6" y="8" width="36" height="24" rx="2.5" fill="#3a7bd5"/><rect x="9" y="11" width="30" height="18" rx="1.5" fill="#1a1a2e"/><path d="M18 35h12M24 32v3" stroke="#5ba0e0" stroke-width="2" stroke-linecap="round"/><rect x="16" y="37" width="16" height="2" rx="1" fill="#5ba0e0"/></svg>`,
-    'documents': `<svg viewBox="0 0 48 48"><path d="M6 16a2 2 0 012-2h12l3 3h17a2 2 0 012 2v17a2 2 0 01-2 2H8a2 2 0 01-2-2V16z" fill="#e8a838"/><path d="M6 21h36v15a2 2 0 01-2 2H8a2 2 0 01-2-2V21z" fill="#ffc107"/></svg>`,
+    'projects': `<svg viewBox="0 0 48 48"><path d="M6 16a2 2 0 012-2h12l3 3h17a2 2 0 012 2v17a2 2 0 01-2 2H8a2 2 0 01-2-2V16z" fill="#e8a838"/><path d="M6 21h36v15a2 2 0 01-2 2H8a2 2 0 01-2-2V21z" fill="#ffc107"/></svg>`,
+    'games': `<svg viewBox="0 0 48 48"><path d="M6 16a2 2 0 012-2h12l3 3h17a2 2 0 012 2v17a2 2 0 01-2 2H8a2 2 0 01-2-2V16z" fill="#e8a838"/><path d="M6 21h36v15a2 2 0 01-2 2H8a2 2 0 01-2-2V21z" fill="#ffc107"/><path d="M19 26h10a3 3 0 012.9 3.8l-.8 3a1.8 1.8 0 01-3 .8l-1.6-1.6h-5l-1.6 1.6a1.8 1.8 0 01-3-.8l-.8-3A3 3 0 0119 26z" fill="#7c4dff"/><path d="M21 28.5v2.5M19.75 29.75h2.5" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/><circle cx="27.5" cy="29" r="0.8" fill="#fff"/><circle cx="26" cy="30.5" r="0.8" fill="#fff"/></svg>`,
     'maximize': `<svg viewBox="0 0 10 10"><rect x="1" y="1" width="8" height="8" rx="0.5" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>`,
     'restore': `<svg viewBox="0 0 10 10"><rect x="2.5" y="0.5" width="7" height="7" rx="0.5" fill="none" stroke="currentColor" stroke-width="1"/><rect x="0.5" y="2.5" width="7" height="7" rx="0.5" fill="var(--win-window-header)" stroke="currentColor" stroke-width="1"/></svg>`,
     'close': `<svg viewBox="0 0 10 10"><path d="M1 1l8 8M9 1l-8 8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>`,
@@ -10,12 +11,16 @@ const ICONS = {
     'file': `<svg viewBox="0 0 40 40"><path d="M10 4h14l8 8v22a2 2 0 01-2 2H10a2 2 0 01-2-2V6a2 2 0 012-2z" fill="#5ba0e0"/><path d="M24 4v6a2 2 0 002 2h6" fill="#4a90d9"/><path d="M14 20h12M14 25h8" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" stroke-linecap="round"/></svg>`,
     'markdown-file': `<svg viewBox="0 0 40 40"><path d="M10 4h14l8 8v22a2 2 0 01-2 2H10a2 2 0 01-2-2V6a2 2 0 012-2z" fill="#5ba0e0"/><path d="M24 4v6a2 2 0 002 2h6" fill="#4a90d9"/><path d="M14 20h12M14 25h8" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" stroke-linecap="round"/></svg>`,
     'markdown-viewer': `<svg viewBox="0 0 40 40"><path d="M12 4h12l8 8v20a2 2 0 01-2 2H12a2 2 0 01-2-2V6a2 2 0 012-2z" fill="#5ba0e0"/><path d="M24 4v6a2 2 0 002 2h6" fill="#4a90d9"/><path d="M16 18l3 3-3 3M24 18l-3 3 3 3" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+    'pdf-file': `<svg viewBox="0 0 40 40"><path d="M10 4h14l8 8v22a2 2 0 01-2 2H10a2 2 0 01-2-2V6a2 2 0 012-2z" fill="#e53935"/><path d="M24 4v6a2 2 0 002 2h6" fill="#b71c1c"/><rect x="11" y="19" width="18" height="9" rx="1.5" fill="rgba(0,0,0,0.22)"/><text x="20" y="25.5" text-anchor="middle" fill="#fff" font-size="6.5" font-weight="700" font-family="Inter, sans-serif">PDF</text></svg>`,
+    'pdf-viewer': `<svg viewBox="0 0 40 40"><path d="M10 4h14l8 8v22a2 2 0 01-2 2H10a2 2 0 01-2-2V6a2 2 0 012-2z" fill="#e53935"/><path d="M24 4v6a2 2 0 002 2h6" fill="#b71c1c"/><rect x="11" y="19" width="18" height="9" rx="1.5" fill="rgba(0,0,0,0.22)"/><text x="20" y="25.5" text-anchor="middle" fill="#fff" font-size="6.5" font-weight="700" font-family="Inter, sans-serif">PDF</text></svg>`,
 };
 
 // ------ start menu programs ------
 const START_PROGRAMS = [
+    { id: 'projects', name: 'Projetos' },
+    { id: 'games', name: 'Jogos' },
+    { id: 'pdf-viewer', name: 'Currículo (PDF)', file: 'curriculo.pdf' },
     { id: 'markdown-viewer', name: 'Leitor de Markdown' },
-    { id: 'documents', name: 'Documentos' },
     { id: 'this-pc', name: 'Este PC' },
     { id: 'recycle-bin', name: 'Lixeira' },
 ];
@@ -23,11 +28,64 @@ const START_PROGRAMS = [
 // ------ mobile app definitions ------
 const MOBILE_APPS = [
     { id: 'this-pc', name: 'Este PC', color: '#3a7bd5', icon: ICONS['this-pc'] },
-    { id: 'documents', name: 'Documentos', color: '#e8a838', icon: ICONS['documents'] },
+    { id: 'projects', name: 'Projetos', color: '#e8a838', icon: ICONS['projects'] },
+    { id: 'games', name: 'Jogos', color: '#7c4dff', icon: ICONS['games'] },
+    { id: 'pdf-viewer', name: 'Currículo', color: '#e53935', icon: ICONS['pdf-file'], file: 'curriculo.pdf' },
     { id: 'markdown-viewer', name: 'Markdown', color: '#5ba0e0', icon: ICONS['file'] }
 ];
 
-const DOCK_APPS = ['this-pc', 'documents', 'markdown-viewer'];
+const DOCK_APPS = ['this-pc', 'projects', 'games', 'pdf-viewer'];
+
+// ------ project folders data ------
+const PROJECTS_DATA = {
+    root: {
+        breadcrumb: 'Projetos',
+        items: [
+            { type: 'folder', id: 'graduacao', label: 'Graduação' },
+            { type: 'folder', id: 'pessoais', label: 'Pessoais' }
+        ]
+    },
+    graduacao: {
+        breadcrumb: 'Projetos › Graduação',
+        items: [
+            { type: 'md', file: 'datarural.md', label: 'datarural.md' },
+            { type: 'md', file: 'agendamento-lab.md', label: 'agendamento-lab.md' },
+            { type: 'md', file: 'compiladores.md', label: 'compiladores.md' },
+            { type: 'md', file: 'e-commerce.md', label: 'e-commerce.md' },
+            { type: 'md', file: 'sistemasDeRecomendacao.md', label: 'sistemasDeRecomendacao.md' },
+            { type: 'md', file: 'estruturaDeDadosII.md', label: 'estruturaDeDadosII.md' },
+            { type: 'md', file: 'inteligenciaArtificial.md', label: 'inteligenciaArtificial.md' },
+            { type: 'md', file: 'jogoCG.md', label: 'jogoCG.md' },
+            { type: 'md', file: 'jogoPE.md', label: 'jogoPE.md' }
+        ]
+    },
+    pessoais: {
+        breadcrumb: 'Projetos › Pessoais',
+        items: [
+            { type: 'md', file: 'email-classifier.md', label: 'email-classifier.md' },
+            { type: 'md', file: 'chess-bot.md', label: 'chess-bot.md' }
+        ]
+    }
+};
+
+const GAMES_ITEMS = [
+    { type: 'md', file: 'cloneHero.md', label: 'cloneHero.md' },
+    { type: 'md', file: 'chess-bot.md', label: 'chess-bot.md' },
+    { type: 'md', file: 'jogoCG.md', label: 'jogoCG.md' },
+    { type: 'md', file: 'jogoPE.md', label: 'jogoPE.md' }
+];
+
+function renderFileGridItems(items) {
+    return items.map(item => {
+        if (item.type === 'folder') {
+            return `<div class="file-item folder-item-open" data-subfolder="${item.id}">${ICONS['folder']}<span>${item.label}</span></div>`;
+        }
+        if (item.type === 'pdf') {
+            return `<div class="file-item pdf-file-open" data-app="pdf-viewer" data-file="${item.file}">${ICONS['pdf-file']}<span>${item.label}</span></div>`;
+        }
+        return `<div class="file-item md-file-open" data-app="markdown-viewer" data-file="${item.file}">${ICONS['markdown-file']}<span>${item.label}</span></div>`;
+    }).join('');
+}
 
 // ------ hardware detection ------
 function getGPUInfo() {
@@ -73,8 +131,8 @@ const APP_CONFIGS = {
         content: () => `
             <div class="explorer-toolbar">
                 <div class="explorer-nav">
-                    <button><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2L4 6l4 4"/></svg></button>
-                    <button><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2l4 4-4 4"/></svg></button>
+                    <button disabled><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2L4 6l4 4"/></svg></button>
+                    <button disabled><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2l4 4-4 4"/></svg></button>
                 </div>
                 <div class="explorer-breadcrumb">
                     ${ICONS['recycle-bin'].replace(/width="[^"]*"/g, '').replace(/height="[^"]*"/g, '')}
@@ -98,8 +156,8 @@ const APP_CONFIGS = {
             return `
             <div class="explorer-toolbar">
                 <div class="explorer-nav">
-                    <button><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2L4 6l4 4"/></svg></button>
-                    <button><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2l4 4-4 4"/></svg></button>
+                    <button disabled><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2L4 6l4 4"/></svg></button>
+                    <button disabled><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2l4 4-4 4"/></svg></button>
                 </div>
                 <div class="explorer-breadcrumb">
                     ${ICONS['this-pc'].replace(/width="[^"]*"/g, '').replace(/height="[^"]*"/g, '')}
@@ -167,29 +225,40 @@ const APP_CONFIGS = {
             </div>`;
         }
     },
-    'documents': {
-        title: 'Documentos',
-        width: 41.25, height: 27.5,
+    'projects': {
+        title: 'Projetos',
+        width: 43, height: 28,
         content: () => `
             <div class="explorer-toolbar">
                 <div class="explorer-nav">
-                    <button><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2L4 6l4 4"/></svg></button>
-                    <button><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2l4 4-4 4"/></svg></button>
+                    <button class="exp-back-btn" title="Voltar" disabled><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2L4 6l4 4"/></svg></button>
+                    <button class="exp-fwd-btn" title="Avançar" disabled><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2l4 4-4 4"/></svg></button>
                 </div>
                 <div class="explorer-breadcrumb">
-                    ${ICONS['documents'].replace(/width="[^"]*"/g, '').replace(/height="[^"]*"/g, '')}
-                    Documentos
+                    ${ICONS['projects'].replace(/width="[^"]*"/g, '').replace(/height="[^"]*"/g, '')}
+                    <span class="exp-breadcrumb-text">Projetos</span>
+                </div>
+            </div>
+            <div class="file-grid" id="projects-file-grid">
+                ${renderFileGridItems(PROJECTS_DATA.root.items)}
+            </div>`
+    },
+    'games': {
+        title: 'Jogos',
+        width: 41.25, height: 26,
+        content: () => `
+            <div class="explorer-toolbar">
+                <div class="explorer-nav">
+                    <button disabled><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2L4 6l4 4"/></svg></button>
+                    <button disabled><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2l4 4-4 4"/></svg></button>
+                </div>
+                <div class="explorer-breadcrumb">
+                    ${ICONS['games'].replace(/width="[^"]*"/g, '').replace(/height="[^"]*"/g, '')}
+                    Jogos
                 </div>
             </div>
             <div class="file-grid">
-                <div class="file-item md-file-open" data-app="markdown-viewer" data-file="README.md">${ICONS['markdown-file']}<span>README.md</span></div>
-                <div class="file-item md-file-open" data-app="markdown-viewer" data-file="PROJETO.md">${ICONS['markdown-file']}<span>PROJETO.md</span></div>
-                <div class="file-item">${ICONS['folder']}<span>Projetos</span></div>
-                <div class="file-item">${ICONS['folder']}<span>Trabalho</span></div>
-                <div class="file-item">${ICONS['folder']}<span>Pessoal</span></div>
-                <div class="file-item">${ICONS['file']}<span>notas.txt</span></div>
-                <div class="file-item">${ICONS['file']}<span>resumo.pdf</span></div>
-                <div class="file-item">${ICONS['file']}<span>planilha.xlsx</span></div>
+                ${renderFileGridItems(GAMES_ITEMS)}
             </div>`
     },
     'markdown-viewer': {
@@ -199,6 +268,37 @@ const APP_CONFIGS = {
             <div class="md-viewer-layout">
                 <div class="md-content-pane">
                     <div class="markdown-body" id="md-rendered-pane"></div>
+                </div>
+            </div>`
+    },
+    'pdf-viewer': {
+        title: 'curriculo.pdf',
+        width: 52, height: 36,
+        content: () => `
+            <div class="pdf-viewer-layout">
+                <div class="pdf-toolbar">
+                    <div class="pdf-toolbar-info">
+                        ${ICONS['pdf-file']}
+                        <span class="pdf-filename">curriculo.pdf</span>
+                        <span class="pdf-badge">Desatualizado</span>
+                    </div>
+                    <div class="pdf-toolbar-actions">
+                        <a href="curriculo.pdf" target="_blank" rel="noopener noreferrer" class="pdf-action-btn" title="Abrir em nova aba">
+                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 2h5v5M14 2L7 9M6 3H3a1 1 0 00-1 1v9a1 1 0 001 1h9a1 1 0 001-1v-3"/>
+                            </svg>
+                            <span>Nova guia</span>
+                        </a>
+                        <a href="curriculo.pdf" download="curriculo-rafael-vieira.pdf" class="pdf-action-btn primary" title="Baixar PDF">
+                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M8 2v8m0 0l-3-3m3 3l3-3M2 12v1a1 1 0 001 1h10a1 1 0 001-1v-1"/>
+                            </svg>
+                            <span>Baixar</span>
+                        </a>
+                    </div>
+                </div>
+                <div class="pdf-frame-container">
+                    <iframe src="curriculo.pdf" class="pdf-viewer-frame" title="Currículo PDF"></iframe>
                 </div>
             </div>`
     }

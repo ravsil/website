@@ -34,6 +34,113 @@ function toggleMaximize(win) {
     }
 }
 
+function bindExplorerFileClicks(container, isMobile = false) {
+    container.querySelectorAll('.md-file-open').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const mdFile = item.dataset.file;
+            if (isMobile) {
+                openMobileApp('markdown-viewer', mdFile, true);
+            } else {
+                openApp('markdown-viewer', mdFile);
+            }
+        });
+    });
+
+    container.querySelectorAll('.pdf-file-open').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const pdfFile = item.dataset.file || 'curriculo.pdf';
+            if (isMobile) {
+                openMobileApp('pdf-viewer', pdfFile, true);
+            } else {
+                openApp('pdf-viewer', pdfFile);
+            }
+        });
+    });
+}
+
+function initProjectsExplorer(container, isMobile = false, initialFolder = 'root') {
+    const grid = container.querySelector('#projects-file-grid') || container.querySelector('.file-grid');
+    const breadcrumbText = container.querySelector('.exp-breadcrumb-text');
+    const backBtn = container.querySelector('.exp-back-btn');
+    const fwdBtn = container.querySelector('.exp-fwd-btn');
+
+    let history = [initialFolder];
+    let historyIndex = 0;
+
+    function renderFolder(folderKey) {
+        const folderData = PROJECTS_DATA[folderKey] || PROJECTS_DATA.root;
+        if (grid) {
+            grid.innerHTML = renderFileGridItems(folderData.items);
+        }
+
+        if (breadcrumbText) {
+            if (folderKey === 'root') {
+                breadcrumbText.innerHTML = 'Projetos';
+            } else {
+                const subName = folderData.breadcrumb.split('›')[1]?.trim() || folderKey;
+                breadcrumbText.innerHTML = `<span class="breadcrumb-link" data-target="root">Projetos</span> &rsaquo; <span>${subName}</span>`;
+                breadcrumbText.querySelector('.breadcrumb-link')?.addEventListener('click', () => {
+                    navigateTo('root');
+                });
+            }
+        }
+
+        if (backBtn) backBtn.disabled = historyIndex <= 0;
+        if (fwdBtn) fwdBtn.disabled = historyIndex >= history.length - 1;
+
+        if (grid) {
+            grid.querySelectorAll('.folder-item-open').forEach(folderEl => {
+                folderEl.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const sub = folderEl.dataset.subfolder;
+                    if (sub && PROJECTS_DATA[sub]) {
+                        navigateTo(sub);
+                    }
+                });
+            });
+            bindExplorerFileClicks(grid, isMobile);
+        }
+    }
+
+    function navigateTo(folderKey) {
+        if (history[historyIndex] === folderKey) return;
+        history = history.slice(0, historyIndex + 1);
+        history.push(folderKey);
+        historyIndex = history.length - 1;
+        renderFolder(folderKey);
+    }
+
+    backBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (historyIndex > 0) {
+            historyIndex--;
+            renderFolder(history[historyIndex]);
+        }
+    });
+
+    fwdBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (historyIndex < history.length - 1) {
+            historyIndex++;
+            renderFolder(history[historyIndex]);
+        }
+    });
+
+    container.getCurrentFolder = () => history[historyIndex];
+    container.navigateBackInExplorer = () => {
+        if (historyIndex > 0) {
+            historyIndex--;
+            renderFolder(history[historyIndex]);
+            return true;
+        }
+        return false;
+    };
+
+    renderFolder(initialFolder);
+}
+
 function openApp(appId, targetFile) {
     // if window exists, bring to front or restore
     const existing = document.querySelector(`.app-window[data-app="${appId}"]`);
@@ -121,14 +228,11 @@ function openApp(appId, targetFile) {
         toggleMaximize(win);
     });
 
-    // allow file items in explorer to open markdown files
-    win.querySelectorAll('.md-file-open').forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const mdFile = item.dataset.file;
-            openApp('markdown-viewer', mdFile);
-        });
-    });
+    if (appId === 'projects') {
+        initProjectsExplorer(win, false);
+    } else {
+        bindExplorerFileClicks(win, false);
+    }
 
     if (appId === 'markdown-viewer') {
         initMarkdownViewerListeners(win, targetFile || 'README.md');
@@ -346,6 +450,17 @@ async function fetchMarkdownFile(fileName) {
     return processDevicePlaceholder(rawText);
 }
 
+function decorateExternalLinks(container) {
+    if (!container) return;
+    container.querySelectorAll('a[href]').forEach(a => {
+        const href = a.getAttribute('href') || '';
+        if (href.startsWith('http://') || href.startsWith('https://')) {
+            a.setAttribute('target', '_blank');
+            a.setAttribute('rel', 'noopener noreferrer');
+        }
+    });
+}
+
 function initMarkdownViewerListeners(win, initialFile = 'README.md') {
     const renderedPane = win.querySelector('#md-rendered-pane');
     let currentFile = initialFile;
@@ -354,9 +469,27 @@ function initMarkdownViewerListeners(win, initialFile = 'README.md') {
         const winTitle = win.querySelector('.window-title');
         if (winTitle) winTitle.textContent = currentFile;
 
+        if (currentFile !== 'README.md' && win.classList?.contains('app-window') && !win.classList.contains('maximized')) {
+            const currentH = parseFloat(win.style.height) || 0;
+            if (currentH <= 21) {
+                win.style.height = APP_CONFIGS['markdown-viewer'].height + 'rem';
+                const desktop = document.getElementById('desktop');
+                if (desktop) {
+                    const remPx = getRemInPx();
+                    const desktopHRem = desktop.getBoundingClientRect().height / remPx;
+                    const curTop = parseFloat(win.style.top) || 0;
+                    if (curTop + APP_CONFIGS['markdown-viewer'].height > desktopHRem) {
+                        win.style.top = Math.max(0.5, (desktopHRem - APP_CONFIGS['markdown-viewer'].height) / 2) + 'rem';
+                    }
+                }
+            }
+        }
+
         const mdText = await fetchMarkdownFile(currentFile);
         if (renderedPane) {
             renderedPane.innerHTML = window.marked ? marked.parse(mdText) : mdText;
+            decorateExternalLinks(renderedPane);
+            renderedPane.parentElement?.scrollTo(0, 0);
         }
     }
 

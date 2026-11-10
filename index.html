@@ -53,8 +53,8 @@
                     <span class="icon-label">Este PC</span>
                 </div>
 
-                <!-- documentos -->
-                <div class="desktop-icon" data-app="documents">
+                <!-- projetos -->
+                <div class="desktop-icon" data-app="projects">
                     <div class="icon-img">
                         <svg viewBox="0 0 48 48">
                             <path d="M6 16a2 2 0 012-2h12l3 3h17a2 2 0 012 2v17a2 2 0 01-2 2H8a2 2 0 01-2-2V16z"
@@ -62,7 +62,38 @@
                             <path d="M6 21h36v15a2 2 0 01-2 2H8a2 2 0 01-2-2V21z" fill="#ffc107" />
                         </svg>
                     </div>
-                    <span class="icon-label">Documentos</span>
+                    <span class="icon-label">Projetos</span>
+                </div>
+
+                <!-- jogos -->
+                <div class="desktop-icon" data-app="games">
+                    <div class="icon-img">
+                        <svg viewBox="0 0 48 48">
+                            <path d="M6 16a2 2 0 012-2h12l3 3h17a2 2 0 012 2v17a2 2 0 01-2 2H8a2 2 0 01-2-2V16z"
+                                fill="#e8a838" />
+                            <path d="M6 21h36v15a2 2 0 01-2 2H8a2 2 0 01-2-2V21z" fill="#ffc107" />
+                            <path d="M19 26h10a3 3 0 012.9 3.8l-.8 3a1.8 1.8 0 01-3 .8l-1.6-1.6h-5l-1.6 1.6a1.8 1.8 0 01-3-.8l-.8-3A3 3 0 0119 26z"
+                                fill="#7c4dff" />
+                            <path d="M21 28.5v2.5M19.75 29.75h2.5" stroke="#fff" stroke-width="1.2" stroke-linecap="round" />
+                            <circle cx="27.5" cy="29" r="0.8" fill="#fff" />
+                            <circle cx="26" cy="30.5" r="0.8" fill="#fff" />
+                        </svg>
+                    </div>
+                    <span class="icon-label">Jogos</span>
+                </div>
+
+                <!-- curriculo.pdf -->
+                <div class="desktop-icon" data-app="pdf-viewer" data-file="curriculo.pdf">
+                    <div class="icon-img">
+                        <svg viewBox="0 0 48 48">
+                            <path d="M12 5h16l10 10v28a3 3 0 01-3 3H12a3 3 0 01-3-3V8a3 3 0 013-3z" fill="#e53935" />
+                            <path d="M28 5v10a2 2 0 002 2h10" fill="#b71c1c" />
+                            <rect x="13" y="23" width="22" height="11" rx="2" fill="rgba(0,0,0,0.22)" />
+                            <text x="24" y="31" text-anchor="middle" fill="#fff" font-size="7.5" font-weight="700"
+                                font-family="Inter, sans-serif">PDF</text>
+                        </svg>
+                    </div>
+                    <span class="icon-label">curriculo.pdf</span>
                 </div>
 
                 <!-- markdown readme.md -->
@@ -113,7 +144,9 @@
                     <div class="start-right-divider"></div>
 
                     <div class="start-sys-links">
-                        <div class="start-sys-item" data-app="documents">Documentos</div>
+                        <div class="start-sys-item" data-app="projects">Projetos</div>
+                        <div class="start-sys-item" data-app="games">Jogos</div>
+                        <div class="start-sys-item" data-app="pdf-viewer" data-file="curriculo.pdf">Currículo</div>
                         <div class="start-sys-item" data-app="this-pc">Este PC</div>
                         <div class="start-sys-item" data-app="recycle-bin">Lixeira</div>
                     </div>
@@ -195,7 +228,7 @@
                     </svg>
                 </button>
                 <!-- file explorer -->
-                <button class="taskbar-btn" id="tb-explorer" title="Explorador de Arquivos" data-app="documents">
+                <button class="taskbar-btn" id="tb-explorer" title="Projetos" data-app="projects">
                     <svg viewBox="0 0 20 20">
                         <path
                             d="M2 7a1.5 1.5 0 011.5-1.5h5L10 7h7.5A1.5 1.5 0 0119 8.5v7A1.5 1.5 0 0117.5 17h-14A1.5 1.5 0 012 15.5V7z"
