@@ -1,0 +1,130 @@
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.container {
+    flex: 1;
+}
+
+.grower {
+    background-color: rgb(182, 182, 182);
+    transition: transform 0.3s ease;
+    padding: 0.313rem;
+    border-radius: 10%;
+}
+
+.grower:hover,
+.grower:active {
+    cursor: pointer;
+    transform: scale(1.2);
+    background-color: rgb(138, 138, 138);
+    transition: transform 0.3s ease, background-color 0.5s ease;
+}
+
+.soft-btn {
+    background-color: rgb(32, 36, 41);
+    margin-bottom: 0.5rem;
+
+}
+
+.soft-btn:hover,
+.soft-btn:active {
+    cursor: pointer;
+    transform: scale(1.1);
+    background-color: rgb(22, 26, 31);
+    transition: transform 0.3s ease, background-color 0.5s ease;
+}
+
+.info {
+    display: none;
+    position: absolute;
+    top: -65%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgb(219, 219, 219);
+    padding: 0.35rem 1.1rem;
+    color: white;
+    border-radius: 0.313rem;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.left {
+    left: 95% !important;
+}
+
+.right {
+    left: 0% !important;
+}
+
+.grower:hover+.info,
+.grower:active+.info {
+    display: block;
+}
+
+.disp-info {
+    display: none;
+    position: absolute;
+    top: -200%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgb(219, 219, 219);
+    padding: 0.35rem 1.1rem;
+    color: white;
+    border-radius: 0.313rem;
+    white-space: nowrap;
+}
+
+.grower:hover .disp-info,
+.grower:active .disp-info {
+    display: block;
+}
+
+
+button {
+    margin: 1.4rem 0.2rem;
+    display: flex;
+    justify-content: center;
+}
+
+#popup {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.popup_content {
+    background-color: rgb(219, 219, 219);
+    margin: 15% auto;
+    padding: 1.25rem;
+    width: 15rem;
+    border-radius: 0.313rem;
+    animation-name: animatetop;
+    animation-duration: 0.4s
+}
+
+@media (max-width: 500px) {
+    .popup_content {
+        margin: 50% auto;
+    }
+}
+
+@keyframes animatetop {
+    from {
+        top: -18.75rem;
+        opacity: 0
+    }
+
+    to {
+        top: 0;
+        opacity: 1
+    }
+}

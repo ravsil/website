@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BDV e-commerce©</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --color-primary: #FF6B99;
+      --color-secondary: #70BA77;
+      --color-secondary-dark: #4EA155;
+      --color-accept: #7770BA;
+      --color-deny: #BA7770;
+    }
+    .shadow-bottom {
+      box-shadow: 0 8px 12px -6px rgba(0, 0, 0, 0.18), 0 4px 8px -6px rgba(0, 0, 0, 0.1);
+    }
+    .inset-shadow-xs {
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
+    }
+    .t-underline {
+      position: relative;
+      display: inline-block;
+    }
+    .t-underline::after {
+      content: '';
+      position: absolute;
+      height: 2px;
+      width: 0%;
+      background-color: #ffffff;
+      bottom: -2px;
+      left: 0;
+      transition: width 0.3s ease-in;
+    }
+    button:hover .t-underline::after,
+    .t-underline:hover::after {
+      width: 100%;
+    }
+    .torto {
+      clip-path: polygon(0 0, 100% 0, 55% 100%, 0% 100%);
+    }
+    .torto-wrap {
+      filter: drop-shadow(4px 1px 10px #000000);
+    }
+    @keyframes slide-in {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(0); }
+    }
+    @keyframes fade-in-start {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-slide-in {
+      animation: slide-in 0.7s ease-in-out forwards;
+    }
+    .animate-fade-in-start {
+      animation: fade-in-start 0.5s ease-out forwards;
+    }
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  </style>
+</head>
+<body class="bg-gray-200 min-h-screen text-black flex flex-col">
+
+  <!-- Top Header (matches header.edge) -->
+  <header id="app-header" class="relative bg-black w-full flex flex-row px-2 md:px-6 py-2.5 items-center justify-between gap-2 z-40">
+    <a href="#/" onclick="navigate('/'); return false;" class="shrink-0">
+      <h1 class="text-center text-white text-sm md:text-xl p-1 md:p-2 px-3 md:px-4 bg-black border-2 border-white shadow-sm shadow-zinc-600/50 hover:shadow-md hover:shadow-zinc-600/50 hover:scale-[1.01] transition duration-150 ease-in font-semibold tracking-tight">
+        BDV<br class="md:hidden"> e-commerce<sup>©</sup>
+      </h1>
+    </a>
+
+    <!-- Search Bar (matches search.edge) -->
+    <div class="flex flex-row items-center grow justify-center max-w-2xl mx-2">
+      <div class="relative w-full md:w-4/5 hidden md:block">
+        <input id="product-search"
+          class="bg-gray-200 text-black px-4 w-full h-10 focus:outline-none inset-shadow-xs focus:bg-white transition duration-150 ease-in text-sm"
+          placeholder="Buscar Produto por nome, categoria ou descrição..." type="text" name="search">
+        <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 hover:text-black font-bold">✕</button>
+      </div>
+
+      <!-- Mobile search button -->
+      <button id="mobile-search-button" type="button" onclick="toggleMobileSearch()"
+        class="md:hidden text-white p-2 flex items-center justify-center">
+        <svg width="20px" height="20px" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" style="filter:invert(100%)">
+          <path d="M17.545 15.467l-3.779-3.779a6.15 6.15 0 0 0 .898-3.21c0-3.417-2.961-6.377-6.378-6.377A6.185 6.185 0 0 0 2.1 8.287c0 3.416 2.961 6.377 6.377 6.377a6.15 6.15 0 0 0 3.115-.844l3.799 3.801a.953.953 0 0 0 1.346 0l.943-.943c.371-.371.236-.84-.135-1.211zM4.004 8.287a4.282 4.282 0 0 1 4.282-4.283c2.366 0 4.474 2.107 4.474 4.474a4.284 4.284 0 0 1-4.283 4.283c-2.366-.001-4.473-2.109-4.473-4.474z"/>
+        </svg>
+      </button>
+
+      <div id="mobile-search-dropdown" class="hidden absolute left-1/2 transform -translate-x-1/2 top-full mt-2 w-11/12 bg-white p-2 rounded shadow-lg z-50 md:hidden">
+        <input id="mobile-search-input" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none text-black text-sm" placeholder="Buscar Produto..." type="text">
+      </div>
+    </div>
+
+    <!-- Right Auth & Cart Controls -->
+    <div id="header-right" class="flex flex-row items-center gap-2 md:gap-4 shrink-0"></div>
+  </header>
+
+  <!-- Flash Notification Banner -->
+  <div id="flash-container" class="w-full max-w-7xl mx-auto px-4 mt-3 empty:hidden"></div>
+
+  <!-- Main SPA View Slot -->
+  <main id="app-main" class="w-full flex-1 flex justify-center pb-20"></main>
+
+  <!-- Stripe Checkout Simulation Modal -->
+  <div id="stripe-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+    <div class="bg-white text-black w-full max-w-lg shadow-2xl border border-zinc-200 overflow-hidden animate-fade-in-start">
+      <div class="bg-black text-white px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+          <span class="font-bold tracking-tight">Stripe Checkout</span>
+          <span class="text-xs bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded border border-zinc-700">MODO TESTE</span>
+        </div>
+        <button onclick="closeStripeModal()" class="text-zinc-400 hover:text-white text-lg leading-none">&times;</button>
+      </div>
+
+      <form id="stripe-checkout-form" onsubmit="handleStripePayment(event)" class="p-6 flex flex-col gap-4">
+        <div class="bg-zinc-50 border border-zinc-200 p-3 flex justify-between items-center">
+          <div>
+            <p class="text-xs text-zinc-500 uppercase font-semibold">Resumo do Pedido — BDV e-commerce©</p>
+            <p id="stripe-items-summary" class="text-sm font-medium text-zinc-800 mt-0.5"></p>
+          </div>
+          <div id="stripe-total-amount" class="text-xl font-bold text-black"></div>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-bold uppercase text-zinc-600">E-mail do Comprador</label>
+          <input id="stripe-email" type="email" required class="p-2 bg-gray-100 border-2 border-zinc-300 focus:border-black focus:outline-none text-sm" />
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-bold uppercase text-zinc-600">Dados do Cartão de Crédito</label>
+          <div class="border-2 border-zinc-300 bg-gray-100 p-2 flex flex-col gap-2">
+            <div class="flex items-center justify-between border-b border-zinc-300 pb-2">
+              <input id="stripe-card-number" type="text" required value="4242 •••• •••• 4242" placeholder="0000 0000 0000 0000"
+                class="bg-transparent w-full focus:outline-none text-sm font-mono tracking-wider" />
+              <span class="text-xs font-bold px-1.5 py-0.5 bg-blue-900 text-white rounded">VISA</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <input id="stripe-card-exp" type="text" required value="12/29" placeholder="MM/AA"
+                class="bg-transparent focus:outline-none text-sm font-mono border-r border-zinc-300 pr-2" />
+              <input id="stripe-card-cvc" type="text" required value="424" placeholder="CVC"
+                class="bg-transparent focus:outline-none text-sm font-mono pl-2" />
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-bold uppercase text-zinc-600">Nome no Cartão</label>
+          <input id="stripe-card-name" type="text" required value="RAFAEL V SILVA" placeholder="Nome impresso no cartão"
+            class="p-2 bg-gray-100 border-2 border-zinc-300 focus:border-black focus:outline-none text-sm uppercase" />
+        </div>
+
+        <div class="flex items-center justify-end gap-3 mt-2 pt-3 border-t border-zinc-200">
+          <button type="button" onclick="cancelStripeCheckout()" class="px-4 py-2.5 border border-black text-black text-sm hover:bg-gray-100 transition">
+            Cancelar
+          </button>
+          <button id="stripe-submit-btn" type="submit" class="px-6 py-2.5 bg-black text-white text-sm font-semibold shadow-sm hover:scale-[1.01] transition cursor-pointer">
+            <span class="t-underline">Pagar Agora</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Floating Demo Account Switcher Bar -->
+  <div class="fixed bottom-4 right-4 z-40 bg-black/95 text-white px-3.5 py-2.5 rounded-lg shadow-2xl border border-zinc-700 text-xs flex flex-wrap items-center gap-2 max-w-md">
+    <span class="text-emerald-400 font-bold">● Demo BDV:</span>
+    <button onclick="quickSwitchRole('guest')" id="badge-btn-guest" class="px-2 py-1 rounded border border-zinc-600 hover:bg-zinc-800 transition cursor-pointer">
+      🛒 Visitante (Guest)
+    </button>
+    <button onclick="quickSwitchRole('customer')" id="badge-btn-customer" class="px-2 py-1 rounded border border-zinc-600 hover:bg-zinc-800 transition cursor-pointer">
+      👤 Cliente
+    </button>
+    <button onclick="quickSwitchRole('admin')" id="badge-btn-admin" class="px-2 py-1 rounded border border-zinc-600 hover:bg-zinc-800 transition cursor-pointer">
+      🔑 Admin (/admin)
+    </button>
+    <button onclick="resetEcommerceDB()" title="Restaurar estoque e produtos originais" class="px-2 py-1 rounded bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 cursor-pointer">
+      ↺ Reset
+    </button>
+  </div>
+
+  <script src="app-demo.js"></script>
+</body>
+</html>

@@ -1,0 +1,2595 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Compilador Maphra — Playground & Tradutor de 3 Endereços</title>
+  <style>
+    :root {
+      --bg-primary: #0b0f19;
+      --bg-secondary: #111827;
+      --bg-panel: #161f33;
+      --bg-code: #0d1322;
+      --border: #26334d;
+      --text-main: #e2e8f0;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-hover: #0ea5e9;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-purple: #a855f7;
+      --danger: #ef4444;
+      --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.5;
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(180deg, rgba(22, 31, 51, 0.95) 0%, rgba(17, 24, 39, 0.95) 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 0.9rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo-wrap {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      background: radial-gradient(circle at 30% 30%, rgba(56, 189, 248, 0.22), rgba(168, 85, 247, 0.12));
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      box-shadow: 0 4px 16px rgba(56, 189, 248, 0.15);
+    }
+
+    .logo-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .brand-text h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .badge {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      padding: 0.15rem 0.55rem;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      letter-spacing: 0.04em;
+    }
+
+    .badge-purple {
+      background: rgba(168, 85, 247, 0.15);
+      color: #c084fc;
+      border-color: rgba(168, 85, 247, 0.3);
+    }
+
+    .brand-text p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* Controls Bar */
+    .toolbar {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.85rem;
+    }
+
+    .toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    label.control-label {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    select, input.stdin-input {
+      background: var(--bg-panel);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.5rem 0.85rem;
+      font-size: 0.88rem;
+      font-family: var(--font-sans);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    select:focus, input.stdin-input:focus {
+      border-color: var(--accent);
+    }
+
+    input.stdin-input {
+      font-family: var(--font-mono);
+      width: 210px;
+      font-size: 0.82rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: none;
+      border-radius: 8px;
+      padding: 0.55rem 1.1rem;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: var(--font-sans);
+    }
+
+    .btn-run {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-run:hover {
+      filter: brightness(1.08);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--bg-panel);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Main Workspace Rows */
+    .workspace {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      padding: 1rem 1.5rem;
+    }
+
+    .pane-intermediate {
+      display: none;
+    }
+
+    .pane-intermediate.visible {
+      display: flex;
+    }
+
+    .subtle-ir-toggle {
+      background: transparent;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      padding: 0.18rem 0.55rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+
+    .subtle-ir-toggle:hover,
+    .subtle-ir-toggle.active {
+      color: #c084fc;
+      border-color: rgba(168, 85, 247, 0.45);
+      background: rgba(168, 85, 247, 0.08);
+    }
+
+    .pane {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    }
+
+    .pane-header {
+      background: var(--bg-panel);
+      padding: 0.65rem 1rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .pane-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-main);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-blue { background: var(--accent); }
+    .dot-purple { background: var(--accent-purple); }
+    .dot-green { background: var(--accent-green); }
+
+    .pane-meta {
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      background: rgba(15, 23, 42, 0.6);
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    /* Code Editor */
+    .editor-container {
+      position: relative;
+      flex: 1;
+      display: flex;
+      background: var(--bg-code);
+      min-height: 280px;
+      max-height: 360px;
+    }
+
+    .line-numbers {
+      width: 44px;
+      padding: 0.9rem 0.5rem 0.9rem 0;
+      text-align: right;
+      font-family: var(--font-mono);
+      font-size: 0.84rem;
+      line-height: 1.55;
+      color: #475569;
+      background: rgba(15, 23, 42, 0.5);
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+      user-select: none;
+      overflow: hidden;
+    }
+
+    textarea#maphra-source {
+      flex: 1;
+      background: transparent;
+      color: #f8fafc;
+      border: none;
+      outline: none;
+      padding: 0.9rem;
+      font-family: var(--font-mono);
+      font-size: 0.84rem;
+      line-height: 1.55;
+      resize: none;
+      tab-size: 4;
+      white-space: pre;
+      overflow: auto;
+    }
+
+    pre.code-output {
+      flex: 1;
+      background: var(--bg-code);
+      color: #cbd5e1;
+      padding: 0.9rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.81rem;
+      line-height: 1.52;
+      overflow: auto;
+      white-space: pre;
+      max-height: 520px;
+    }
+
+    /* Syntax colors in C 3-address output */
+    .c-comment { color: #64748b; font-style: italic; }
+    .c-preproc { color: #c084fc; }
+    .c-kw { color: #38bdf8; font-weight: 600; }
+    .c-label { color: #f59e0b; font-weight: 700; }
+    .c-temp { color: #93c5fd; }
+    .c-str { color: #34d399; }
+
+    /* Terminal Output */
+    .terminal-body {
+      flex: 1;
+      background: #070a12;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.84rem;
+      line-height: 1.6;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      min-height: 190px;
+      max-height: 320px;
+    }
+
+    .term-cmd {
+      color: #64748b;
+      font-size: 0.78rem;
+      border-bottom: 1px dashed #1e293b;
+      padding-bottom: 0.45rem;
+    }
+
+    .term-cmd span {
+      color: #10b981;
+    }
+
+    .term-lines {
+      color: #e2e8f0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .term-line-input {
+      color: #38bdf8;
+    }
+
+    .term-error {
+      color: #f87171;
+      background: rgba(239, 68, 68, 0.1);
+      border-left: 3px solid #ef4444;
+      padding: 0.5rem 0.75rem;
+      border-radius: 4px;
+    }
+
+    .stats-bar {
+      background: var(--bg-panel);
+      border-top: 1px solid var(--border);
+      padding: 0.55rem 0.9rem;
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      font-family: var(--font-mono);
+    }
+
+    /* Quick Reference Drawer */
+    .reference-section {
+      padding: 0 1.5rem 1.5rem;
+    }
+
+    .reference-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+    }
+
+    .reference-card h3 {
+      font-size: 0.9rem;
+      color: var(--accent);
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .ref-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .ref-item {
+      background: var(--bg-code);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      padding: 0.65rem 0.8rem;
+      font-size: 0.79rem;
+    }
+
+    .ref-item strong {
+      display: block;
+      color: #f8fafc;
+      margin-bottom: 0.25rem;
+      font-size: 0.81rem;
+    }
+
+    .ref-item code {
+      font-family: var(--font-mono);
+      color: #38bdf8;
+      font-size: 0.76rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="logo-wrap">
+        <img src="peixinho.svg" alt="Logo Maphra Peixinho" />
+      </div>
+      <div class="brand-text">
+        <h1>
+          Compilador Maphra
+          <span class="badge">Lex / Yacc</span>
+          <span class="badge badge-purple">UFRRJ</span>
+        </h1>
+        <p>Ambiente interativo de desenvolvimento e execução da linguagem Maphra (UFRRJ).</p>
+      </div>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <div class="toolbar-group">
+      <label class="control-label" for="preset-select">Exemplos (.mpr):</label>
+      <select id="preset-select" aria-label="Selecionar programa de exemplo Maphra">
+        <option value="exemplo">1. exemplo.mpr (Básico, I/O &amp; Swap x, y = y, x)</option>
+        <option value="condicionais_switch">2. condicionais_switch.mpr (Ternário, switch/dafoe, ^ ? ~)</option>
+        <option value="lacos">3. lacos.mpr (for, while com for(j>0), do...for)</option>
+        <option value="funcoes_structs">4. funcoes_structs.mpr (func, sobrecarga, struct &amp; bind)</option>
+        <option value="vetores_matrizes">5. vetores_matrizes.mpr (Vetores dinâmicos, slices [1:3], matrizes)</option>
+        <option value="wheeldecide">6. wheeldecide.mpr (Dijkstra Guarded Commands wd &amp; do wd)</option>
+      </select>
+    </div>
+
+    <div class="toolbar-group">
+      <label class="control-label" for="stdin-values" title="Valores separados por vírgula para chamadas input()">Entrada (stdin):</label>
+      <input type="text" id="stdin-values" class="stdin-input" value="42, Maphra" placeholder="Ex: 42, Maphra" />
+      <button class="btn btn-run" id="btn-compile-run">
+        <span>&#9654;</span> Compilar e Executar (<code>make run</code>)
+      </button>
+    </div>
+  </div>
+
+  <main class="workspace">
+    <!-- Row 1: Maphra Source Editor -->
+    <section class="pane">
+      <div class="pane-header">
+        <div class="pane-title">
+          <span class="dot dot-blue"></span>
+          Código-Fonte Maphra
+        </div>
+        <span class="pane-meta" id="source-filename">example/exemplo.mpr</span>
+      </div>
+      <div class="editor-container">
+        <div class="line-numbers" id="line-numbers">1</div>
+        <textarea id="maphra-source" spellcheck="false" aria-label="Editor de código Maphra"></textarea>
+      </div>
+      <div class="stats-bar">
+        <span id="lexer-stats">Scanner: lex (src/lex.l) &bull; Parser: yacc -d src/sin.y</span>
+      </div>
+    </section>
+
+    <!-- Row 2: Execution Output Terminal -->
+    <section class="pane pane-terminal">
+      <div class="pane-header">
+        <div class="pane-title">
+          <span class="dot dot-green"></span>
+          Terminal de Saída (<code>./output</code>)
+        </div>
+        <span class="pane-meta" id="exec-status">Pronto</span>
+      </div>
+      <div class="terminal-body" id="terminal-output" aria-live="polite"></div>
+      <div class="stats-bar">
+        <span id="scope-vars">Variáveis na tabela de símbolos: 0</span>
+        <span id="exec-time">Tempo: 0.0 ms</span>
+      </div>
+    </section>
+  </main>
+
+  <section class="reference-section">
+    <div class="reference-card">
+      <h3>Guia Rápido da Gramática Maphra (<code>src/lex.l</code> &amp; <code>src/sin.y</code>)</h3>
+      <div class="ref-grid">
+        <div class="ref-item">
+          <strong>Tipos &amp; Swap</strong>
+          <code>int</code>, <code>float</code>, <code>bool</code> (<code>T</code>/<code>F</code>), <code>string</code>.<br/>
+          Troca direta: <code>x, y = y, x;</code>
+        </div>
+        <div class="ref-item">
+          <strong>Operadores Lógicos &amp; Ternário</strong>
+          AND: <code>a ^ b</code> | OR: <code>a ? b</code> | NOT: <code>~a</code><br/>
+          Ternário: <code>"Sim" if x &gt; 0 else "Não"</code>
+        </div>
+        <div class="ref-item">
+          <strong>Condicionais &amp; Switch</strong>
+          <code>if (c) { ... } else { ... }</code> (ou <code>helcio</code>)<br/>
+          <code>switch (v) { case 1: ... dafoe: ... }</code>
+        </div>
+        <div class="ref-item">
+          <strong>Laços Unificados (<code>for</code>)</strong>
+          Clássico: <code>for (i = 0; i &lt; 5; i++)</code><br/>
+          While: <code>for (j &gt; 0)</code> | Do: <code>do { ... } for (k &lt; 1)</code>
+        </div>
+        <div class="ref-item">
+          <strong>Funções, Structs &amp; Métodos</strong>
+          <code>func soma(int a, int b): int</code><br/>
+          <code>bind Square getArea(): int { this.p1... }</code>
+        </div>
+        <div class="ref-item">
+          <strong>Vetores, Slices &amp; Wheeldecide</strong>
+          <code>v.append(10)</code>, <code>v.len()</code>, <code>v[1:3]</code><br/>
+          Dijkstra: <code>wheeldecide { opt T { ... } }</code>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // =========================================================================
+    // 1. PRESET EXAMPLES COVERING ALL FEATURES FROM README.md
+    // =========================================================================
+    const PRESETS = {
+      exemplo: {
+        filename: "example/exemplo.mpr",
+        code: `// 1. Sintaxe Básica, Tipos Primitivos, I/O e Troca de Variáveis
+func main() {
+    int a = 10
+    float b = 3.14
+    bool c = T
+    string d = "Olá, Maphra!"
+    e = 2025 // variável declarada implicitamente
+
+    print("=== Tipos e Variáveis ===")
+    print("int a:", a, "| float b:", b, "| bool c:", c)
+    print("Mensagem:", d, "| Ano:", e)
+
+    // Troca nativa de variáveis (swap)
+    int x = 10;
+    int y = 20;
+    print("Antes do swap -> x:", x, "y:", y);
+    x, y = y, x;
+    print("Depois do swap -> x:", x, "y:", y);
+
+    // Entrada e Saída (usa valores do campo stdin acima)
+    int num = input("Digite um número: ")
+    string nome = input("Digite uma string: ")
+    print("Leitura concluída ->", num, "|", nome)
+}`
+      },
+
+      condicionais_switch: {
+        filename: "example/condicionais_switch.mpr",
+        code: `// 2. Expressão Ternária, Operadores Lógicos (^, ?, ~) e Switch/Dafoe
+func main() {
+    int idade = 21;
+    string status = "Maior de idade" if idade >= 18 else "Menor de idade";
+    print("Status (Ternário):", status);
+
+    bool temCarteira = T;
+    bool acompanhado = F;
+
+    // Operadores lógicos: ^ (AND), ? (OR), ~ (NOT)
+    if ((idade >= 18 ^ temCarteira) ? acompanhado) {
+        print("Permissão para dirigir: Liberada");
+    }
+
+    if (~acompanhado) {
+        print("Nota: Condutor está desacompanhado (~acompanhado == T)");
+    }
+
+    int a = 3;
+    int b = 3;
+    if (a < b) {
+        print("'a' é menor que 'b'");
+    } else if (a == b) {
+        print("'a' é igual a 'b'");
+    } else {
+        print("'a' é maior que 'b'");
+    }
+
+    string foo = "hello"
+    switch (foo) {
+        case "hello":
+            print("switch -> foo é hello")
+            break
+        case "world":
+            print("switch -> foo é world")
+            break
+        dafoe:
+            print("switch -> foo não é nem hello nem world")
+    }
+}`
+      },
+
+      lacos: {
+        filename: "example/lacos.mpr",
+        code: `// 3. Laços de Repetição: for clássico, while (for cond) e do-while (do...for)
+func main() {
+    print("--- Laço for (com continue no 3) ---");
+    for (i = 0; i < 5; i++) {
+        if (i == 3) {
+            continue;
+        }
+        print("i =", i);
+    }
+
+    print("--- Laço while: for (j > 0) com break no 2 ---");
+    int j = 5;
+    for (j > 0) {
+        if (j == 2) {
+            break
+        }
+        print("j =", j);
+        j--;
+    }
+
+    print("--- Laço do-while: do { ... } for (k < 3) ---");
+    int k = 0;
+    do {
+        print("k =", k);
+        k++;
+    } for (k < 3);
+}`
+      },
+
+      funcoes_structs: {
+        filename: "example/funcoes_structs.mpr",
+        code: `// 4. Funções, Sobrecarga, Structs Aninhados e Métodos (bind)
+struct Point {
+    int x;
+    int y;
+}
+
+struct Square {
+    Point p1;
+    Point p2;
+    Point p3;
+    Point p4;
+}
+
+func soma(int a, int b): int {
+    return a + b
+}
+
+func saudacao(string name) {
+    print("Hello,", name + "!")
+}
+
+// Sobrecarga de funções pelo tipo dos parâmetros
+func produto(int a, int b): int {
+    return a * b
+}
+
+func produto(Point p): int {
+    return p.x * p.y
+}
+
+// Método associado ao struct Square via bind
+bind Square getArea(): int {
+    return (this.p2.x - this.p1.x) * (this.p3.y - this.p1.y)
+}
+
+// Método associado ao tipo primitivo float
+bind float squared(float a): float {
+    return a * a
+}
+
+func main() {
+    saudacao("UFRRJ")
+    print("soma(12, 30) =", soma(12, 30))
+
+    Point pt
+    pt.x = 6
+    pt.y = 7
+    print("produto(4, 5) =", produto(4, 5))
+    print("produto(Point{6,7}) =", produto(pt))
+
+    Square sq
+    sq.p1.x = 0; sq.p1.y = 0;
+    sq.p2.x = 8; sq.p2.y = 0;
+    sq.p3.x = 0; sq.p3.y = 5;
+    print("Área do Square (bind getArea):", sq.getArea())
+
+    float raio = 4.5
+    print("4.5.squared() =", raio.squared(raio))
+}`
+      },
+
+      vetores_matrizes: {
+        filename: "example/vetores_matrizes.mpr",
+        code: `// 5. Vetores Dinâmicos (.append, .len, .remove), Slices [1:3], for-in e Matrizes
+func main() {
+    string cores[];
+    cores.append("vermelho");
+    cores.append("verde");
+    cores.append("azul");
+    print("Cores (tamanho inicial):", cores.len());
+    cores.remove(0);
+    print("Após cores.remove(0), tamanho:", cores.len(), "| Primeiro:", cores[0]);
+
+    int numeros[];
+    numeros.append(10);
+    numeros.append(20);
+    numeros.append(30);
+    numeros.append(40);
+
+    print("Primeiro elemento de numeros:", numeros[0]);
+
+    int fatia[] = numeros[1:3];
+    print("Iterando sobre slice numeros[1:3] com for-in:");
+    for (int el in fatia) {
+        print(" -> elemento da fatia:", el);
+    }
+
+    int matriz[][]
+    matriz.append([1, 2, 3])
+    matriz.append([4, 5, 6])
+    print("Acesso à matriz 2D: matriz[0][1] =", matriz[0][1], "| matriz[1][2] =", matriz[1][2])
+}`
+      },
+
+      wheeldecide: {
+        filename: "example/wheeldecide.mpr",
+        code: `// 6. Comandos Guardados de Dijkstra (wheeldecide / wd)
+func main() {
+    print("=== Sorteio Não-Determinístico (wheeldecide) ===")
+    wheeldecide {
+        opt T {
+            print(" -> O ramo sorteado pela guarda foi: Opção 1")
+        }
+        opt T {
+            print(" -> O ramo sorteado pela guarda foi: Opção 2")
+        }
+        opt T {
+            print(" -> O ramo sorteado pela guarda foi: Opção 3")
+        }
+    }
+
+    // Ordenação não-determinística com do wd (Guarded Loop)
+    int q1 = 42
+    int q2 = 7
+    int q3 = 19
+    int q4 = 3
+    print("Antes do 'do wd':", q1, q2, q3, q4)
+
+    do wd {
+        opt q1 > q2 {
+            q1, q2 = q2, q1
+        }
+        opt q2 > q3 {
+            q2, q3 = q3, q2
+        }
+        opt q3 > q4 {
+            q3, q4 = q4, q3
+        }
+    }
+
+    print("Após ordenação guardada 'do wd':", q1, q2, q3, q4)
+}`
+      }
+    };
+
+    // =========================================================================
+    // 2. MAPHRA COMPILER (3-ADDRESS C TRANSLATOR) & INTERPRETER
+    //    Follows src/lex.l, src/sin.y, and src/utils.hpp
+    // =========================================================================
+    class MaphraCompilerAndVM {
+      constructor(stdinValues = []) {
+        this.stdinQueue = [...stdinValues];
+        this.tempCount = 0;
+        this.labelCount = 0;
+        this.funcCount = 0;
+        this.methodCount = 0;
+        this.structCount = 0;
+
+        this.variables = []; // { nome, tipo, id, ehDinamico }
+        this.varMap = new Map();
+        this.structs = new Map(); // name -> { id, fields: [{name, type}] }
+        this.functions = []; // { name, id, returnType, params, bodyLines }
+        this.methods = [];   // { targetType, name, id, returnType, params, bodyLines }
+        this.freeVars = [];
+        this.freeVectors = [];
+
+        this.vectorUsed = false;
+        this.removeUsed = false;
+        this.sliceUsed = false;
+        this.strCompared = false;
+        this.wdUsed = false;
+
+        this.stdout = [];
+      }
+
+      genId() {
+        return `t${this.tempCount++}`;
+      }
+
+      genLabel() {
+        return `L${this.labelCount++}`;
+      }
+
+      cType(tipo) {
+        if (tipo === "string") return "char*";
+        if (tipo && tipo.endsWith("[]")) return "struct Vetor";
+        if (this.structs.has(tipo)) return this.structs.get(tipo).id;
+        return tipo || "int";
+      }
+
+      declareVar(nome, tipo, ehDinamico = false) {
+        if (this.varMap.has(nome)) {
+          return this.varMap.get(nome);
+        }
+        const id = this.genId();
+        const entry = { nome, tipo: this.cType(tipo), rawType: tipo, id, ehDinamico };
+        this.variables.push(entry);
+        this.varMap.set(nome, entry);
+        if (ehDinamico) {
+          this.vectorUsed = true;
+          this.freeVectors.push(id);
+        }
+        return entry;
+      }
+
+      declareTemp(tipo) {
+        const id = this.genId();
+        const entry = { nome: String(this.tempCount - 1), tipo: this.cType(tipo), rawType: tipo, id, ehDinamico: false };
+        this.variables.push(entry);
+        return id;
+      }
+
+      stripComments(src) {
+        // Remove /* ... */ and // ...
+        return src
+          .replace(/\/\*[\s\S]*?\*\//g, "")
+          .replace(/\/\/.*$/gm, "");
+      }
+
+      // Extract Balanced Braces block starting at openBraceIdx
+      extractBlock(text, openBraceIdx) {
+        let depth = 0;
+        for (let i = openBraceIdx; i < text.length; i++) {
+          if (text[i] === "{") depth++;
+          else if (text[i] === "}") {
+            depth--;
+            if (depth === 0) {
+              return {
+                content: text.slice(openBraceIdx + 1, i),
+                endIdx: i + 1
+              };
+            }
+          }
+        }
+        throw new Error("Bloco '{' não fechado corretamente.");
+      }
+
+      compileAndRun(sourceCode) {
+        const t0 = performance.now();
+        const cleaned = this.stripComments(sourceCode);
+
+        // 1. Parse top-level structs, functions, methods, and main
+        const topLevel = this.parseTopLevel(cleaned);
+
+        // 2. Generate 3-Address C Code matching sin.y & utils.hpp
+        const cCode = this.generateThreeAddressC(topLevel);
+
+        // 3. Execute AST / statements in Maphra VM
+        this.executeProgram(topLevel);
+
+        const elapsed = (performance.now() - t0).toFixed(2);
+        return {
+          cCode,
+          stdout: this.stdout,
+          tempCount: this.tempCount,
+          labelCount: this.labelCount,
+          varCount: this.variables.length,
+          elapsed
+        };
+      }
+
+      parseTopLevel(src) {
+        const structs = [];
+        const funcs = [];
+        const binds = [];
+        let mainBody = "";
+        const globalStmts = [];
+
+        let i = 0;
+        const len = src.length;
+
+        while (i < len) {
+          // Skip whitespace & semicolons
+          while (i < len && /[\s;]/.test(src[i])) i++;
+          if (i >= len) break;
+
+          const rest = src.slice(i);
+
+          // Match struct Name { ... }
+          const structMatch = rest.match(/^struct\s+([A-Za-z_]\w*)\s*\{/);
+          if (structMatch) {
+            const name = structMatch[1];
+            const braceIdx = i + structMatch[0].length - 1;
+            const blk = this.extractBlock(src, braceIdx);
+            const fields = [];
+            blk.content.split(/[\n;]+/).forEach(line => {
+              const m = line.trim().match(/^(int|float|bool|string|[A-Za-z_]\w*)\s+([A-Za-z_]\w*)$/);
+              if (m) fields.push({ type: m[1], name: m[2] });
+            });
+            const sId = `struct ${name}`;
+            this.structs.set(name, { id: sId, name, fields });
+            structs.push({ name, id: sId, fields });
+            i = blk.endIdx;
+            continue;
+          }
+
+          // Match func Name(...) [: type] { ... }
+          const funcMatch = rest.match(/^func\s+([A-Za-z_]\w*)\s*\(([^)]*)\)\s*(?::\s*(int|float|bool|string|[A-Za-z_]\w*))?\s*\{/);
+          if (funcMatch) {
+            const name = funcMatch[1];
+            const rawParams = funcMatch[2].trim();
+            const retType = funcMatch[3] || "void";
+            const braceIdx = i + funcMatch[0].length - 1;
+            const blk = this.extractBlock(src, braceIdx);
+
+            const params = this.parseParams(rawParams);
+            if (name === "main") {
+              mainBody = blk.content;
+            } else {
+              const fId = `f${this.funcCount++}`;
+              funcs.push({ name, id: fId, retType, params, body: blk.content });
+            }
+            i = blk.endIdx;
+            continue;
+          }
+
+          // Match bind TargetType MethodName(...) [: type] { ... }
+          const bindMatch = rest.match(/^bind\s+([A-Za-z_]\w*)\s+([A-Za-z_]\w*)\s*\(([^)]*)\)\s*(?::\s*(int|float|bool|string|[A-Za-z_]\w*))?\s*\{/);
+          if (bindMatch) {
+            const targetType = bindMatch[1];
+            const name = bindMatch[2];
+            const rawParams = bindMatch[3].trim();
+            const retType = bindMatch[4] || "void";
+            const braceIdx = i + bindMatch[0].length - 1;
+            const blk = this.extractBlock(src, braceIdx);
+            const params = this.parseParams(rawParams);
+            const mId = `m${this.methodCount++}`;
+            binds.push({ targetType, name, id: mId, retType, params, body: blk.content });
+            i = blk.endIdx;
+            continue;
+          }
+
+          // Otherwise read line as global statement
+          const nlIdx = rest.indexOf("\n");
+          if (nlIdx === -1) {
+            globalStmts.push(rest.trim());
+            break;
+          } else {
+            globalStmts.push(rest.slice(0, nlIdx).trim());
+            i += nlIdx + 1;
+          }
+        }
+
+        if (!mainBody && globalStmts.length > 0) {
+          mainBody = globalStmts.join("\n");
+        } else if (globalStmts.length > 0) {
+          mainBody = globalStmts.join("\n") + "\n" + mainBody;
+        }
+
+        return { structs, funcs, binds, mainBody };
+      }
+
+      parseParams(rawParams) {
+        if (!rawParams) return [];
+        return rawParams.split(",").map(p => {
+          const m = p.trim().match(/^(int|float|bool|string|[A-Za-z_]\w*)\s+([A-Za-z_]\w*)(\[\])?$/);
+          if (!m) return { type: "int", name: p.trim() };
+          return { type: m[1] + (m[3] || ""), name: m[2] };
+        });
+      }
+
+      // =======================================================================
+      // 3-ADDRESS C CODE GENERATOR (faithful to sin.y + utils.hpp)
+      // =======================================================================
+      generateThreeAddressC(topLevel) {
+        const structDefs = [];
+        for (const st of topLevel.structs) {
+          let def = `struct ${st.name} {\n`;
+          for (const f of st.fields) {
+            const cT = f.type === "string" ? "char*" : (this.structs.has(f.type) ? `struct ${f.type}` : f.type);
+            def += `\t${cT} ${f.name};\n`;
+          }
+          def += `};\n\n`;
+          structDefs.push(def);
+        }
+
+        const funcTranslations = [];
+        const prototypes = [];
+
+        // Translate functions
+        for (const fn of topLevel.funcs) {
+          const cRet = this.cType(fn.retType);
+          const paramVars = fn.params.map(p => {
+            const v = this.declareVar(`${fn.id}_${p.name}`, p.type);
+            return { ...p, varEntry: v };
+          });
+          const protoParams = paramVars.length
+            ? paramVars.map(p => p.varEntry.tipo).join(", ")
+            : "void";
+          prototypes.push(`${cRet} ${fn.id}(${protoParams});\n`);
+
+          const sigParams = paramVars.map(p => `${p.varEntry.tipo} ${p.varEntry.id}`).join(", ");
+          const bodyCode = this.translateBlockTo3AC(fn.body, fn.id);
+          funcTranslations.push(`${cRet} ${fn.id}(${sigParams}) {\n${bodyCode}}\n\n`);
+        }
+
+        // Translate bind methods
+        for (const bm of topLevel.binds) {
+          const cRet = this.cType(bm.retType);
+          const selfVar = this.declareVar(`${bm.id}_this`, bm.targetType);
+          const paramVars = bm.params.map(p => {
+            const v = this.declareVar(`${bm.id}_${p.name}`, p.type);
+            return { ...p, varEntry: v };
+          });
+          const allParams = [{ varEntry: selfVar }, ...paramVars];
+          const protoParams = allParams.map(p => p.varEntry.tipo).join(", ");
+          prototypes.push(`${cRet} ${bm.id}(${protoParams});\n`);
+
+          const sigParams = allParams.map(p => `${p.varEntry.tipo} ${p.varEntry.id}`).join(", ");
+          const bodyCode = this.translateBlockTo3AC(bm.body, bm.id, selfVar.id);
+          funcTranslations.push(`${cRet} ${bm.id}(${sigParams}) {\n${bodyCode}}\n\n`);
+        }
+
+        // Translate main block
+        const main3AC = this.translateBlockTo3AC(topLevel.mainBody, "");
+
+        // Assemble final C code exactly like genCodigo() in sin.y
+        let codigo =
+          `/*Compilador MAPHRA*/\n` +
+          `#include <string.h>\n` +
+          `#include <stdio.h>\n` +
+          `#include <stdlib.h>\n` +
+          `#include <time.h>\n` +
+          `#define bool int\n` +
+          `#define T 1\n` +
+          `#define F 0\n\n`;
+
+        if (this.vectorUsed) {
+          codigo +=
+            `struct Vetor {\n` +
+            `\tvoid* data;\n` +
+            `\tint tamanho;\n` +
+            `\tint capacidade;\n` +
+            `\tsize_t tam_elemento;\n` +
+            `};\n\n`;
+        }
+
+        for (const def of structDefs) {
+          codigo += def;
+        }
+
+        for (const proto of prototypes) {
+          codigo += proto;
+        }
+
+        if (this.removeUsed) {
+          codigo += `void __maphra_remove_element(struct Vetor* v, int index);\n`;
+        }
+        if (this.sliceUsed) {
+          codigo += `struct Vetor __maphra_slice(struct Vetor* original, int start, int end);\n`;
+        }
+        if (prototypes.length || this.removeUsed || this.sliceUsed) {
+          codigo += `\n`;
+        }
+
+        for (const v of this.variables) {
+          const declType = v.ehDinamico ? "struct Vetor" : v.tipo;
+          if (!/^\d/.test(v.nome)) {
+            codigo += `${declType} ${v.id}; // ${v.nome}\n`;
+          } else {
+            codigo += `${declType} ${v.id};\n`;
+          }
+        }
+
+        if (this.strCompared) {
+          codigo += `\nbool stringcmp(char* s1, char* s2) {\n\treturn strcmp(s1, s2) == 0;\n}\n`;
+        }
+
+        codigo += `\n`;
+        for (const ft of funcTranslations) {
+          codigo += ft;
+        }
+
+        codigo += `int main(void) {\n`;
+        if (this.wdUsed) {
+          codigo += `\tunsigned long long int ulli;\n\tulli = time(NULL);\n\tsrand(ulli);\n`;
+        }
+        codigo += main3AC;
+        codigo += `END:\n`;
+        for (const fv of this.freeVars) {
+          codigo += `\tfree(${fv});\n`;
+        }
+        for (const vetId of this.freeVectors) {
+          codigo += `\tfree(${vetId}.data);\n`;
+        }
+        codigo += `\treturn 0;\n}`;
+
+        return codigo;
+      }
+
+      translateBlockTo3AC(blockText, scopePrefix = "", thisId = null) {
+        let out = "";
+        const stmts = this.splitStatements(blockText);
+
+        for (const rawStmt of stmts) {
+          const s = rawStmt.trim();
+          if (!s) continue;
+
+          // 1. wheeldecide / do wd
+          if (/^(do\s+)?(wheeldecide|wd)\s*\{/.test(s)) {
+            this.wdUsed = true;
+            const isLoop = s.startsWith("do");
+            const braceIdx = s.indexOf("{");
+            const inner = this.extractBlock(s, braceIdx).content;
+            const opts = this.parseWdOptions(inner);
+
+            const guardsId = this.declareTemp("int*");
+            const countId = this.declareTemp("int");
+            const choiceId = this.declareTemp("int");
+            const startLbl = this.genLabel();
+            const endLbl = this.genLabel();
+
+            out += `\t${guardsId} = malloc(${opts.length * 4});\n`;
+            if (isLoop) out += `${startLbl}:\n`;
+            out += `\t${countId} = 0;\n`;
+
+            opts.forEach((opt, idx) => {
+              const condEval = this.translateExpr3AC(opt.guard, scopePrefix, thisId);
+              out += condEval.code;
+              const negCond = this.declareTemp("bool");
+              const skipLbl = this.genLabel();
+              out += `\t${negCond} = !${condEval.temp};\n`;
+              out += `\tif (${negCond}) goto ${skipLbl};\n`;
+              out += `\t${guardsId}[${countId}] = ${idx + 1};\n`;
+              out += `\t${countId} = ${countId} + 1;\n`;
+              out += `${skipLbl}:\n`;
+            });
+
+            const hasValid = this.declareTemp("bool");
+            const rndTemp = this.declareTemp("int");
+            out += `\t${hasValid} = ${countId} != 0;\n`;
+            out += `\t${hasValid} = !${hasValid};\n`;
+            out += `\tif (${hasValid}) goto ${endLbl};\n`;
+            out += `\t${rndTemp} = rand();\n`;
+            out += `\t${choiceId} = ${rndTemp} % ${countId};\n`;
+
+            opts.forEach((opt, idx) => {
+              const cmpTemp = this.declareTemp("bool");
+              const nextOptLbl = this.genLabel();
+              out += `\t${cmpTemp} = ${guardsId}[${choiceId}] != ${idx + 1};\n`;
+              out += `\tif (${cmpTemp}) goto ${nextOptLbl};\n`;
+              out += this.translateBlockTo3AC(opt.body, scopePrefix, thisId);
+              out += `\tgoto ${isLoop ? startLbl : endLbl};\n`;
+              out += `${nextOptLbl}:\n`;
+            });
+
+            out += `${endLbl}:\n\tfree(${guardsId});\n`;
+            continue;
+          }
+
+          // 2. if / else if / else
+          if (s.startsWith("if ") || s.startsWith("if(")) {
+            out += this.translateIf3AC(s, scopePrefix, thisId);
+            continue;
+          }
+
+          // 3. switch
+          if (s.startsWith("switch ") || s.startsWith("switch(")) {
+            out += this.translateSwitch3AC(s, scopePrefix, thisId);
+            continue;
+          }
+
+          // 4. do { ... } for (cond)
+          if (s.startsWith("do ") || s.startsWith("do{")) {
+            const braceIdx = s.indexOf("{");
+            const blk = this.extractBlock(s, braceIdx);
+            const after = s.slice(blk.endIdx).trim();
+            const mFor = after.match(/^for\s*\(([\s\S]+)\)$/);
+            const condExpr = mFor ? mFor[1] : "F";
+            const lStart = this.genLabel();
+            const lEnd = this.genLabel();
+            const body3AC = this.translateBlockTo3AC(blk.content, scopePrefix, thisId);
+            const cond3AC = this.translateExpr3AC(condExpr, scopePrefix, thisId);
+            const negTemp = this.declareTemp("bool");
+            out += `${lStart}:\n${body3AC}${cond3AC.code}\t${negTemp} = !${cond3AC.temp};\n\tif (${negTemp}) goto ${lEnd};\n\tgoto ${lStart};\n${lEnd}:\n`;
+            continue;
+          }
+
+          // 5. for (...) { ... }
+          if (s.startsWith("for ") || s.startsWith("for(")) {
+            out += this.translateFor3AC(s, scopePrefix, thisId);
+            continue;
+          }
+
+          // 6. return
+          if (s.startsWith("return ") || s === "return") {
+            const exprStr = s.slice(6).trim();
+            if (exprStr) {
+              const r = this.translateExpr3AC(exprStr, scopePrefix, thisId);
+              out += r.code + `\treturn ${r.temp};\n`;
+            } else {
+              out += `\treturn;\n`;
+            }
+            continue;
+          }
+
+          // 7. break / continue
+          if (s === "break") {
+            out += `\tgoto BREAK;\n`;
+            continue;
+          }
+          if (s === "continue") {
+            out += `\tgoto CONTINUE;\n`;
+            continue;
+          }
+
+          // 8. print(...)
+          const printMatch = s.match(/^print\s*\(([\s\S]*)\)$/);
+          if (printMatch) {
+            const args = this.splitTopLevelCommas(printMatch[1]);
+            let fmt = "";
+            const argTemps = [];
+            for (const a of args) {
+              const r = this.translateExpr3AC(a.trim(), scopePrefix, thisId);
+              out += r.code;
+              argTemps.push(r.temp);
+              fmt += (fmt ? " " : "") + (r.type === "char*" ? "%s" : r.type === "float" ? "%f" : "%d");
+            }
+            out += `\tprintf("${fmt}\\n", ${argTemps.join(", ")});\n`;
+            continue;
+          }
+
+          // 9. Swap: x, y = y, x
+          const swapMatch = s.match(/^([A-Za-z_]\w*)\s*,\s*([A-Za-z_]\w*)\s*=\s*([A-Za-z_]\w*)\s*,\s*([A-Za-z_]\w*)$/);
+          if (swapMatch) {
+            const v1 = this.lookupOrDeclare(swapMatch[1], "int", scopePrefix);
+            const v2 = this.lookupOrDeclare(swapMatch[2], "int", scopePrefix);
+            const tmp = this.declareTemp(v1.rawType);
+            out += `\t${tmp} = ${v1.id};\n\t${v1.id} = ${v2.id};\n\t${v2.id} = ${tmp};\n`;
+            continue;
+          }
+
+          // 10. Vector declaration: type name[] [= expr] or matrix type name[][]
+          const vecDecl = s.match(/^(int|float|bool|string|[A-Za-z_]\w*)\s+([A-Za-z_]\w*)\s*(\[\])+(?:\s*=\s*([\s\S]+))?$/);
+          if (vecDecl) {
+            const elemType = vecDecl[1];
+            const vName = vecDecl[2];
+            const rhs = vecDecl[4];
+            const vEntry = this.declareVar(scopePrefix ? `${scopePrefix}_${vName}` : vName, elemType, true);
+            const cElem = this.cType(elemType);
+            if (rhs && rhs.includes(":")) {
+              this.sliceUsed = true;
+              const sm = rhs.trim().match(/^([A-Za-z_]\w*)\[([^:]+):([^\]]+)\]$/);
+              if (sm) {
+                const origVar = this.lookupOrDeclare(sm[1], elemType, scopePrefix);
+                const sStart = this.translateExpr3AC(sm[2], scopePrefix, thisId);
+                const sEnd = this.translateExpr3AC(sm[3], scopePrefix, thisId);
+                out += sStart.code + sEnd.code;
+                out += `\t${vEntry.id} = __maphra_slice(&${origVar.id}, ${sStart.temp}, ${sEnd.temp});\n`;
+              }
+            } else {
+              out += `\t${vEntry.id}.tamanho = 0;\n\t${vEntry.id}.capacidade = 8;\n\t${vEntry.id}.tam_elemento = sizeof(${cElem});\n\t${vEntry.id}.data = malloc(8 * sizeof(${cElem}));\n`;
+            }
+            continue;
+          }
+
+          // 11. Vector methods: v.append(...), v.remove(...)
+          const vecMethod = s.match(/^([A-Za-z_]\w*)\.(append|remove)\(([\s\S]*)\)$/);
+          if (vecMethod) {
+            const vEntry = this.lookupOrDeclare(vecMethod[1], "int", scopePrefix);
+            const mName = vecMethod[2];
+            const argExpr = this.translateExpr3AC(vecMethod[3].trim(), scopePrefix, thisId);
+            out += argExpr.code;
+            if (mName === "append") {
+              out += `\t((${vEntry.tipo}*)${vEntry.id}.data)[${vEntry.id}.tamanho] = ${argExpr.temp};\n\t${vEntry.id}.tamanho = ${vEntry.id}.tamanho + 1;\n`;
+            } else if (mName === "remove") {
+              this.removeUsed = true;
+              out += `\t__maphra_remove_element(&${vEntry.id}, ${argExpr.temp});\n`;
+            }
+            continue;
+          }
+
+          // 12. Increment/Decrement: i++, j--
+          const incMatch = s.match(/^([A-Za-z_]\w*)\s*(\+\+|--)$/);
+          if (incMatch) {
+            const vEntry = this.lookupOrDeclare(incMatch[1], "int", scopePrefix);
+            const op = incMatch[2][0];
+            out += `\t${vEntry.id} = ${vEntry.id} ${op} 1;\n`;
+            continue;
+          }
+
+          // 13. Declaration with or without assignment: [type] name = expr
+          const declAssign = s.match(/^(?:(int|float|bool|string|[A-Za-z_]\w*)\s+)?([A-Za-z_][\w.]*)\s*(\+=|-=|\*=|\/=|=)\s*([\s\S]+)$/);
+          if (declAssign) {
+            const explicitType = declAssign[1];
+            const lhs = declAssign[2];
+            const op = declAssign[3];
+            const rhs = declAssign[4].trim();
+
+            if (lhs.includes(".")) {
+              const parts = lhs.split(".");
+              const rootVar = this.lookupOrDeclare(parts[0], explicitType || "int", scopePrefix);
+              const r = this.translateExpr3AC(rhs, scopePrefix, thisId);
+              out += r.code;
+              const fieldPath = `${rootVar.id}.${parts.slice(1).join(".")}`;
+              out += `\t${fieldPath} = ${r.temp};\n`;
+              continue;
+            }
+
+            const r = this.translateExpr3AC(rhs, scopePrefix, thisId, explicitType);
+            const wasDeclared = this.varMap.has(scopePrefix ? `${scopePrefix}_${lhs}` : lhs) || this.varMap.has(lhs);
+            const vEntry = this.lookupOrDeclare(lhs, explicitType || r.rawType || "int", scopePrefix);
+
+            out += r.code;
+            if (op === "=") {
+              const implicitComment = (!explicitType && !wasDeclared) ? ` // variável ${lhs} declarada implicitamente` : "";
+              out += `\t${vEntry.id} = ${r.temp};${implicitComment}\n`;
+            } else {
+              const baseOp = op[0];
+              out += `\t${vEntry.id} = ${vEntry.id} ${baseOp} ${r.temp};\n`;
+            }
+            continue;
+          }
+
+          // 14. Pure variable declaration: int a / Point pt
+          const pureDecl = s.match(/^(int|float|bool|string|[A-Za-z_]\w*)\s+([A-Za-z_]\w*)$/);
+          if (pureDecl) {
+            this.lookupOrDeclare(pureDecl[2], pureDecl[1], scopePrefix);
+            continue;
+          }
+
+          // 15. General expression / function call
+          const exprRes = this.translateExpr3AC(s, scopePrefix, thisId);
+          out += exprRes.code;
+        }
+
+        return out;
+      }
+
+      lookupOrDeclare(name, fallbackType = "int", scopePrefix = "") {
+        if (scopePrefix && this.varMap.has(`${scopePrefix}_${name}`)) {
+          return this.varMap.get(`${scopePrefix}_${name}`);
+        }
+        if (this.varMap.has(name)) {
+          return this.varMap.get(name);
+        }
+        const key = scopePrefix ? `${scopePrefix}_${name}` : name;
+        return this.declareVar(key, fallbackType);
+      }
+
+      translateIf3AC(s, scopePrefix, thisId) {
+        let out = "";
+        const parenStart = s.indexOf("(");
+        const condEnd = this.findMatchingParen(s, parenStart);
+        const condStr = s.slice(parenStart + 1, condEnd);
+        const braceStart = s.indexOf("{", condEnd);
+        const thenBlk = this.extractBlock(s, braceStart);
+
+        const cond3AC = this.translateExpr3AC(condStr, scopePrefix, thisId);
+        const negCond = this.declareTemp("bool");
+        const lFalse = this.genLabel();
+        const lEnd = this.genLabel();
+
+        const rest = s.slice(thenBlk.endIdx).trim();
+        if (!rest) {
+          out += cond3AC.code;
+          out += `\t${negCond} = !${cond3AC.temp};\n`;
+          out += `\tif (${negCond}) goto ${lFalse};\n`;
+          out += this.translateBlockTo3AC(thenBlk.content, scopePrefix, thisId);
+          out += `${lFalse}:\n`;
+        } else {
+          const afterElse = rest.replace(/^(else|helcio)\s*/, "").trim();
+          out += cond3AC.code;
+          out += `\t${negCond} = !${cond3AC.temp};\n`;
+          out += `\tif (${negCond}) goto ${lFalse};\n`;
+          out += this.translateBlockTo3AC(thenBlk.content, scopePrefix, thisId);
+          out += `\tgoto ${lEnd};\n`;
+          out += `${lFalse}:\n`;
+          if (afterElse.startsWith("{")) {
+            const elseBlk = this.extractBlock(afterElse, 0);
+            out += this.translateBlockTo3AC(elseBlk.content, scopePrefix, thisId);
+          } else {
+            out += this.translateIf3AC(afterElse, scopePrefix, thisId);
+          }
+          out += `${lEnd}:\n`;
+        }
+        return out;
+      }
+
+      translateSwitch3AC(s, scopePrefix, thisId) {
+        let out = "";
+        const parenStart = s.indexOf("(");
+        const parenEnd = this.findMatchingParen(s, parenStart);
+        const exprStr = s.slice(parenStart + 1, parenEnd).trim();
+        const braceStart = s.indexOf("{", parenEnd);
+        const blk = this.extractBlock(s, braceStart);
+
+        const swExpr = this.translateExpr3AC(exprStr, scopePrefix, thisId);
+        out += swExpr.code;
+
+        const cases = [];
+        let defaultBody = null;
+        const caseRegex = /(?:(case|opt)\s+([^:]+):|(dafoe|default)\s*:)/g;
+        let matches = [];
+        let m;
+        while ((m = caseRegex.exec(blk.content)) !== null) {
+          matches.push({
+            isDefault: Boolean(m[3]),
+            valExpr: m[2] ? m[2].trim() : null,
+            headerStart: m.index,
+            bodyStart: caseRegex.lastIndex
+          });
+        }
+        for (let i = 0; i < matches.length; i++) {
+          const end = i + 1 < matches.length ? matches[i + 1].headerStart : blk.content.length;
+          const body = blk.content.slice(matches[i].bodyStart, end).trim();
+          if (matches[i].isDefault) defaultBody = body;
+          else cases.push({ valExpr: matches[i].valExpr, body, label: this.genLabel() });
+        }
+
+        const endSwitch = this.genLabel();
+        for (const c of cases) {
+          const cVal = this.translateExpr3AC(c.valExpr, scopePrefix, thisId);
+          out += cVal.code;
+          const cmpTmp = this.declareTemp("bool");
+          if (cVal.type === "char*") {
+            this.strCompared = true;
+            out += `\t${cmpTmp} = stringcmp(${cVal.temp}, ${swExpr.temp});\n`;
+          } else {
+            out += `\t${cmpTmp} = ${cVal.temp} == ${swExpr.temp};\n`;
+          }
+          out += `\tif (${cmpTmp}) goto ${c.label};\n`;
+        }
+
+        if (defaultBody !== null) {
+          out += this.translateBlockTo3AC(defaultBody, scopePrefix, thisId).replace(/\bBREAK\b/g, endSwitch);
+          out += `\tgoto ${endSwitch};\n`;
+        }
+
+        for (const c of cases) {
+          out += `${c.label}:\n`;
+          out += this.translateBlockTo3AC(c.body, scopePrefix, thisId).replace(/\bBREAK\b/g, endSwitch);
+        }
+
+        out += `${endSwitch}:\n`;
+        return out;
+      }
+
+      translateFor3AC(s, scopePrefix, thisId) {
+        let out = "";
+        const parenStart = s.indexOf("(");
+        const parenEnd = this.findMatchingParen(s, parenStart);
+        const header = s.slice(parenStart + 1, parenEnd).trim();
+        const braceStart = s.indexOf("{", parenEnd);
+        const blk = this.extractBlock(s, braceStart);
+
+        // Case A: for (type el in collection)
+        const forInMatch = header.match(/^(int|float|bool|string|[A-Za-z_]\w*)\s+([A-Za-z_]\w*)\s+in\s+([A-Za-z_]\w*)$/);
+        if (forInMatch) {
+          const itemType = forInMatch[1];
+          const itemName = forInMatch[2];
+          const colName = forInMatch[3];
+          const itemVar = this.lookupOrDeclare(itemName, itemType, scopePrefix);
+          const colVar = this.lookupOrDeclare(colName, itemType, scopePrefix);
+
+          const iterId = this.declareTemp("int");
+          const pData = this.declareTemp("char*");
+          const tOffset = this.declareTemp("int");
+          const pElem = this.declareTemp("char*");
+          const lStart = this.genLabel();
+          const lEnd = this.genLabel();
+
+          out += `\t${iterId} = 0;\n`;
+          out += `${lStart}:\n`;
+          out += `\tif (${iterId} >= ${colVar.id}.tamanho) goto ${lEnd};\n`;
+          out += `\t${pData} = ${colVar.id}.data;\n`;
+          out += `\t${tOffset} = ${iterId} * ${colVar.id}.tam_elemento;\n`;
+          out += `\t${pElem} = ${pData} + ${tOffset};\n`;
+          out += `\t${itemVar.id} = *((${itemVar.tipo}*)${pElem});\n`;
+          out += this.translateBlockTo3AC(blk.content, scopePrefix, thisId)
+            .replace(/\bCONTINUE\b/g, lStart)
+            .replace(/\bBREAK\b/g, lEnd);
+          out += `\t${iterId} = ${iterId} + 1;\n`;
+          out += `\tgoto ${lStart};\n`;
+          out += `${lEnd}:\n`;
+          return out;
+        }
+
+        // Case B: for (init; cond; step)
+        if (header.includes(";")) {
+          const parts = header.split(";").map(p => p.trim());
+          const initCode = this.translateBlockTo3AC(parts[0], scopePrefix, thisId);
+          const cond3AC = this.translateExpr3AC(parts[1], scopePrefix, thisId);
+          const stepCode = this.translateBlockTo3AC(parts[2], scopePrefix, thisId);
+
+          const lStart = this.genLabel();
+          const lStep = this.genLabel();
+          const lEnd = this.genLabel();
+          const negCond = this.declareTemp("bool");
+
+          out += initCode;
+          out += `${lStart}:\n`;
+          out += cond3AC.code;
+          out += `\t${negCond} = !${cond3AC.temp};\n`;
+          out += `\tif (${negCond}) goto ${lEnd};\n`;
+          out += this.translateBlockTo3AC(blk.content, scopePrefix, thisId)
+            .replace(/\bCONTINUE\b/g, lStep)
+            .replace(/\bBREAK\b/g, lEnd);
+          out += `${lStep}:\n`;
+          out += stepCode;
+          out += `\tgoto ${lStart};\n`;
+          out += `${lEnd}:\n`;
+          return out;
+        }
+
+        // Case C: while loop -> for (cond)
+        const cond3AC = this.translateExpr3AC(header, scopePrefix, thisId);
+        const lStart = this.genLabel();
+        const lEnd = this.genLabel();
+        const negCond = this.declareTemp("bool");
+
+        out += `${lStart}:\n`;
+        out += cond3AC.code;
+        out += `\t${negCond} = !${cond3AC.temp};\n`;
+        out += `\tif (${negCond}) goto ${lEnd};\n`;
+        out += this.translateBlockTo3AC(blk.content, scopePrefix, thisId)
+          .replace(/\bCONTINUE\b/g, lStart)
+          .replace(/\bBREAK\b/g, lEnd);
+        out += `\tgoto ${lStart};\n`;
+        out += `${lEnd}:\n`;
+        return out;
+      }
+
+      translateExpr3AC(expr, scopePrefix = "", thisId = null, hintType = null) {
+        const e = expr.trim();
+
+        // 1. Ternary: expr1 if cond else expr2
+        const ternMatch = e.match(/^([\s\S]+?)\s+if\s+([\s\S]+?)\s+else\s+([\s\S]+)$/);
+        if (ternMatch) {
+          const eTrue = this.translateExpr3AC(ternMatch[1], scopePrefix, thisId);
+          const eCond = this.translateExpr3AC(ternMatch[2], scopePrefix, thisId);
+          const eFalse = this.translateExpr3AC(ternMatch[3], scopePrefix, thisId);
+          const condNeg = this.declareTemp("bool");
+          const resTemp = this.declareTemp(eTrue.rawType || "int");
+          const lFalse = this.genLabel();
+          const lEnd = this.genLabel();
+
+          const code =
+            eCond.code +
+            `\t${condNeg} = !${eCond.temp};\n` +
+            `\tif (${condNeg}) goto ${lFalse};\n` +
+            eTrue.code +
+            `\t${resTemp} = ${eTrue.temp};\n` +
+            `\tgoto ${lEnd};\n` +
+            `${lFalse}:\n` +
+            eFalse.code +
+            `\t${resTemp} = ${eFalse.temp};\n` +
+            `${lEnd}:\n`;
+          return { code, temp: resTemp, type: eTrue.type, rawType: eTrue.rawType };
+        }
+
+        // 2. input("prompt")
+        const inputMatch = e.match(/^input\s*\(([\s\S]*)\)$/);
+        if (inputMatch) {
+          const promptExpr = inputMatch[1].trim();
+          let code = "";
+          if (promptExpr) {
+            const p3 = this.translateExpr3AC(promptExpr, scopePrefix, thisId);
+            code += p3.code + `\tprintf("%s", ${p3.temp});\n`;
+          }
+          const targetType = hintType || "string";
+          const tmp = this.declareTemp(targetType);
+          if (targetType === "int") {
+            code += `\tscanf("%d", &${tmp});\n`;
+            return { code, temp: tmp, type: "int", rawType: "int" };
+          } else if (targetType === "float") {
+            code += `\tscanf("%f", &${tmp});\n`;
+            return { code, temp: tmp, type: "float", rawType: "float" };
+          } else {
+            code += `\t${tmp} = malloc(256);\n\tscanf("%255s", ${tmp});\n`;
+            this.freeVars.push(tmp);
+            return { code, temp: tmp, type: "char*", rawType: "string" };
+          }
+        }
+
+        // 3. String literal
+        if ((e.startsWith('"') && e.endsWith('"')) || (e.startsWith("'") && e.endsWith("'"))) {
+          const content = e.slice(1, -1);
+          const tmp = this.declareTemp("string");
+          this.freeVars.push(tmp);
+          const code = `\t${tmp} = malloc(${content.length + 1});\n\tstrcpy(${tmp}, "${content}");\n`;
+          return { code, temp: tmp, type: "char*", rawType: "string", strLen: content.length };
+        }
+
+        // 4. Boolean literal T / F
+        if (e === "T" || e === "F") {
+          const tmp = this.declareTemp("bool");
+          return { code: `\t${tmp} = ${e};\n`, temp: tmp, type: "bool", rawType: "bool" };
+        }
+
+        // 5. Numeric literal (int / float)
+        if (/^-?\d+$/.test(e)) {
+          const tmp = this.declareTemp("int");
+          return { code: `\t${tmp} = ${e};\n`, temp: tmp, type: "int", rawType: "int" };
+        }
+        if (/^-?\d+\.\d+$/.test(e)) {
+          const tmp = this.declareTemp("float");
+          return { code: `\t${tmp} = ${e};\n`, temp: tmp, type: "float", rawType: "float" };
+        }
+
+        // 6. Array literal [1, 2, 3]
+        if (e.startsWith("[") && e.endsWith("]")) {
+          this.vectorUsed = true;
+          const tmpVec = this.declareTemp("int[]");
+          const items = this.splitTopLevelCommas(e.slice(1, -1));
+          let code = `\t${tmpVec}.tamanho = ${items.length};\n\t${tmpVec}.capacidade = ${items.length};\n\t${tmpVec}.tam_elemento = sizeof(int);\n\t${tmpVec}.data = malloc(${items.length} * sizeof(int));\n`;
+          items.forEach((it, idx) => {
+            const sub = this.translateExpr3AC(it, scopePrefix, thisId);
+            code += sub.code + `\t((int*)${tmpVec}.data)[${idx}] = ${sub.temp};\n`;
+          });
+          return { code, temp: tmpVec, type: "struct Vetor", rawType: "int[]" };
+        }
+
+        // 7. Logical NOT ~e
+        if (e.startsWith("~")) {
+          const sub = this.translateExpr3AC(e.slice(1), scopePrefix, thisId);
+          const tmp = this.declareTemp("bool");
+          return {
+            code: sub.code + `\t${tmp} = !${sub.temp};\n`,
+            temp: tmp,
+            type: "bool",
+            rawType: "bool"
+          };
+        }
+
+        // 8. Parentheses (e)
+        if (e.startsWith("(") && this.findMatchingParen(e, 0) === e.length - 1) {
+          return this.translateExpr3AC(e.slice(1, -1), scopePrefix, thisId);
+        }
+
+        // 9. Binary operators by precedence: ? (OR), ^ (AND), relational, + -, * /
+        const binSplit =
+          this.splitBinaryOp(e, ["?"]) ||
+          this.splitBinaryOp(e, ["^"]) ||
+          this.splitBinaryOp(e, ["==", "!=", "<=", ">=", "<", ">"]) ||
+          this.splitBinaryOp(e, ["+", "-"]) ||
+          this.splitBinaryOp(e, ["*", "/"]);
+
+        if (binSplit) {
+          const left = this.translateExpr3AC(binSplit.left, scopePrefix, thisId);
+          const right = this.translateExpr3AC(binSplit.right, scopePrefix, thisId);
+          const op = binSplit.op;
+
+          // String concatenation matching sin.y lines 652-668
+          if (op === "+" && (left.type === "char*" || right.type === "char*")) {
+            const res = this.declareTemp("string");
+            const x0 = this.declareTemp("int");
+            const x1 = this.declareTemp("int");
+            const x2 = this.declareTemp("int");
+            const x3 = this.declareTemp("int");
+            const x4 = this.declareTemp("string");
+            this.freeVars.push(res);
+            const code =
+              left.code +
+              right.code +
+              `\t${x0} = strlen(${left.temp});\n` +
+              `\t${x1} = strlen(${right.temp});\n` +
+              `\t${x2} = ${x0} + ${x1};\n` +
+              `\t${x3} = ${x2} + 1;\n` +
+              `\t${x4} = malloc(${x3});\n` +
+              `\tstrcpy(${x4}, ${left.temp});\n` +
+              `\tstrcat(${x4}, ${right.temp});\n` +
+              `\t${res} = ${x4};\n`;
+            return { code, temp: res, type: "char*", rawType: "string" };
+          }
+
+          const isRelOrLog = ["?", "^", "==", "!=", "<=", ">=", "<", ">"].includes(op);
+          const outRawType = isRelOrLog ? "bool" : (left.rawType === "float" || right.rawType === "float" ? "float" : "int");
+          const tmp = this.declareTemp(outRawType);
+          const cOp = op === "^" ? "&&" : op === "?" ? "||" : op;
+          return {
+            code: left.code + right.code + `\t${tmp} = ${left.temp} ${cOp} ${right.temp};\n`,
+            temp: tmp,
+            type: this.cType(outRawType),
+            rawType: outRawType
+          };
+        }
+
+        // 10. Vector len() or bind method call: obj.method(args)
+        const methodCall = e.match(/^([A-Za-z_]\w*)\.([A-Za-z_]\w*)\(([\s\S]*)\)$/);
+        if (methodCall) {
+          const objName = methodCall[1];
+          const mName = methodCall[2];
+          const rawArgs = methodCall[3].trim();
+          const objVar = this.lookupOrDeclare(objName, "int", scopePrefix);
+          if (mName === "len") {
+            const tmp = this.declareTemp("int");
+            return {
+              code: `\t${tmp} = ${objVar.id}.tamanho;\n`,
+              temp: tmp,
+              type: "int",
+              rawType: "int"
+            };
+          }
+          const argList = rawArgs ? this.splitTopLevelCommas(rawArgs).map(a => this.translateExpr3AC(a, scopePrefix, thisId)) : [];
+          let code = argList.map(a => a.code).join("");
+          const tmp = this.declareTemp("float");
+          const callArgs = [objVar.id, ...argList.map(a => a.temp)].join(", ");
+          code += `\t${tmp} = m0(${callArgs});\n`;
+          return { code, temp: tmp, type: "int", rawType: "int" };
+        }
+
+        // 11. Matrix / Vector indexing: v[i][j] or v[i]
+        const idx2D = e.match(/^([A-Za-z_]\w*)\[([^\]]+)\]\[([^\]]+)\]$/);
+        if (idx2D) {
+          const vVar = this.lookupOrDeclare(idx2D[1], "int", scopePrefix);
+          const i1 = this.translateExpr3AC(idx2D[2], scopePrefix, thisId);
+          const i2 = this.translateExpr3AC(idx2D[3], scopePrefix, thisId);
+          const rowTmp = this.declareTemp("int[]");
+          const elemTmp = this.declareTemp("int");
+          const code =
+            i1.code +
+            i2.code +
+            `\t${rowTmp} = ((struct Vetor*)${vVar.id}.data)[${i1.temp}];\n` +
+            `\t${elemTmp} = ((int*)${rowTmp}.data)[${i2.temp}];\n`;
+          return { code, temp: elemTmp, type: "int", rawType: "int" };
+        }
+
+        const idx1D = e.match(/^([A-Za-z_]\w*)\[([^\]]+)\]$/);
+        if (idx1D) {
+          const vVar = this.lookupOrDeclare(idx1D[1], "int", scopePrefix);
+          const i1 = this.translateExpr3AC(idx1D[2], scopePrefix, thisId);
+          const elemTmp = this.declareTemp(vVar.rawType || "int");
+          const code =
+            i1.code +
+            `\t${elemTmp} = ((${vVar.tipo}*)${vVar.id}.data)[${i1.temp}];\n`;
+          return { code, temp: elemTmp, type: vVar.tipo, rawType: vVar.rawType };
+        }
+
+        // 12. Function call: fname(args)
+        const fnCall = e.match(/^([A-Za-z_]\w*)\(([\s\S]*)\)$/);
+        if (fnCall) {
+          const fnName = fnCall[1];
+          const rawArgs = fnCall[2].trim();
+          const argList = rawArgs ? this.splitTopLevelCommas(rawArgs).map(a => this.translateExpr3AC(a, scopePrefix, thisId)) : [];
+          const code = argList.map(a => a.code).join("");
+          const tmp = this.declareTemp("int");
+          return {
+            code: code + `\t${tmp} = ${fnName}(${argList.map(a => a.temp).join(", ")});\n`,
+            temp: tmp,
+            type: "int",
+            rawType: "int"
+          };
+        }
+
+        // 13. Struct field access: this.p2.x or pt.x
+        if (e.includes(".")) {
+          const parts = e.split(".");
+          const baseId = parts[0] === "this" && thisId ? thisId : this.lookupOrDeclare(parts[0], "int", scopePrefix).id;
+          const tmp = this.declareTemp("int");
+          const access = `${baseId}.${parts.slice(1).join(".")}`;
+          return {
+            code: `\t${tmp} = ${access};\n`,
+            temp: tmp,
+            type: "int",
+            rawType: "int"
+          };
+        }
+
+        // 14. Plain variable identifier
+        const vEntry = this.lookupOrDeclare(e, "int", scopePrefix);
+        return {
+          code: "",
+          temp: vEntry.id,
+          type: vEntry.tipo,
+          rawType: vEntry.rawType
+        };
+      }
+
+      // =======================================================================
+      // MAPHRA RUNTIME INTERPRETER (Executes AST and populates Terminal)
+      // =======================================================================
+      executeProgram(topLevel) {
+        this.runtimeStructs = new Map();
+        for (const st of topLevel.structs) {
+          this.runtimeStructs.set(st.name, st.fields);
+        }
+
+        this.runtimeFuncs = topLevel.funcs;
+        this.runtimeBinds = topLevel.binds;
+
+        const globalEnv = new Map();
+        this.execBlock(topLevel.mainBody, globalEnv);
+      }
+
+      instantiateStruct(typeName) {
+        const fields = this.runtimeStructs.get(typeName) || [];
+        const obj = { __struct: typeName };
+        for (const f of fields) {
+          if (this.runtimeStructs.has(f.type)) {
+            obj[f.name] = this.instantiateStruct(f.type);
+          } else if (f.type === "string") {
+            obj[f.name] = "";
+          } else if (f.type === "bool") {
+            obj[f.name] = false;
+          } else {
+            obj[f.name] = 0;
+          }
+        }
+        return obj;
+      }
+
+      execBlock(blockText, env) {
+        const stmts = this.splitStatements(blockText);
+        for (const raw of stmts) {
+          const s = raw.trim();
+          if (!s) continue;
+
+          const res = this.execStmt(s, env);
+          if (res && (res.type === "return" || res.type === "break" || res.type === "continue")) {
+            return res;
+          }
+        }
+        return null;
+      }
+
+      execStmt(s, env) {
+        // 1. wheeldecide / do wd
+        if (/^(do\s+)?(wheeldecide|wd)\s*\{/.test(s)) {
+          const isLoop = s.startsWith("do");
+          const braceIdx = s.indexOf("{");
+          const inner = this.extractBlock(s, braceIdx).content;
+          const opts = this.parseWdOptions(inner);
+
+          let safety = 0;
+          do {
+            const activeOpts = opts.filter(o => Boolean(this.evalExpr(o.guard, env)));
+            if (activeOpts.length === 0) break;
+            const chosen = activeOpts[Math.floor(Math.random() * activeOpts.length)];
+            const r = this.execBlock(chosen.body, env);
+            if (r && r.type === "break") break;
+            if (r && r.type === "return") return r;
+            safety++;
+          } while (isLoop && safety < 500);
+          return null;
+        }
+
+        // 2. if / else
+        if (s.startsWith("if ") || s.startsWith("if(")) {
+          const parenStart = s.indexOf("(");
+          const condEnd = this.findMatchingParen(s, parenStart);
+          const condStr = s.slice(parenStart + 1, condEnd);
+          const braceStart = s.indexOf("{", condEnd);
+          const thenBlk = this.extractBlock(s, braceStart);
+
+          if (this.evalExpr(condStr, env)) {
+            return this.execBlock(thenBlk.content, env);
+          } else {
+            const rest = s.slice(thenBlk.endIdx).trim();
+            if (rest) {
+              const afterElse = rest.replace(/^(else|helcio)\s*/, "").trim();
+              if (afterElse.startsWith("{")) {
+                const elseBlk = this.extractBlock(afterElse, 0);
+                return this.execBlock(elseBlk.content, env);
+              } else {
+                return this.execStmt(afterElse, env);
+              }
+            }
+          }
+          return null;
+        }
+
+        // 3. switch
+        if (s.startsWith("switch ") || s.startsWith("switch(")) {
+          const parenStart = s.indexOf("(");
+          const parenEnd = this.findMatchingParen(s, parenStart);
+          const swVal = this.evalExpr(s.slice(parenStart + 1, parenEnd), env);
+          const braceStart = s.indexOf("{", parenEnd);
+          const blk = this.extractBlock(s, braceStart);
+
+          const caseRegex = /(?:(case|opt)\s+([^:]+):|(dafoe|default)\s*:)/g;
+          let matches = [];
+          let m;
+          while ((m = caseRegex.exec(blk.content)) !== null) {
+            matches.push({
+              isDefault: Boolean(m[3]),
+              valExpr: m[2] ? m[2].trim() : null,
+              headerStart: m.index,
+              bodyStart: caseRegex.lastIndex
+            });
+          }
+          let matched = false;
+          let defBody = null;
+          for (let i = 0; i < matches.length; i++) {
+            const end = i + 1 < matches.length ? matches[i + 1].headerStart : blk.content.length;
+            const body = blk.content.slice(matches[i].bodyStart, end).trim();
+            if (matches[i].isDefault) {
+              defBody = body;
+            } else if (!matched && this.evalExpr(matches[i].valExpr, env) === swVal) {
+              matched = true;
+              const r = this.execBlock(body, env);
+              if (r && r.type === "break") return null;
+              if (r && r.type === "return") return r;
+            }
+          }
+          if (!matched && defBody !== null) {
+            this.execBlock(defBody, env);
+          }
+          return null;
+        }
+
+        // 4. do { ... } for (cond)
+        if (s.startsWith("do ") || s.startsWith("do{")) {
+          const braceIdx = s.indexOf("{");
+          const blk = this.extractBlock(s, braceIdx);
+          const after = s.slice(blk.endIdx).trim();
+          const mFor = after.match(/^for\s*\(([\s\S]+)\)$/);
+          const condExpr = mFor ? mFor[1] : "F";
+          let guard = 0;
+          do {
+            const r = this.execBlock(blk.content, env);
+            if (r && r.type === "break") break;
+            if (r && r.type === "return") return r;
+            guard++;
+          } while (this.evalExpr(condExpr, env) && guard < 1000);
+          return null;
+        }
+
+        // 5. for (...) { ... }
+        if (s.startsWith("for ") || s.startsWith("for(")) {
+          const parenStart = s.indexOf("(");
+          const parenEnd = this.findMatchingParen(s, parenStart);
+          const header = s.slice(parenStart + 1, parenEnd).trim();
+          const braceStart = s.indexOf("{", parenEnd);
+          const blk = this.extractBlock(s, braceStart);
+
+          const forInMatch = header.match(/^(int|float|bool|string|[A-Za-z_]\w*)\s+([A-Za-z_]\w*)\s+in\s+([A-Za-z_]\w*)$/);
+          if (forInMatch) {
+            const varName = forInMatch[2];
+            const arr = env.get(forInMatch[3]) || [];
+            for (const item of arr) {
+              env.set(varName, item);
+              const r = this.execBlock(blk.content, env);
+              if (r && r.type === "break") break;
+              if (r && r.type === "return") return r;
+            }
+            return null;
+          }
+
+          if (header.includes(";")) {
+            const parts = header.split(";").map(p => p.trim());
+            this.execStmt(parts[0], env);
+            let guard = 0;
+            while (this.evalExpr(parts[1], env) && guard < 1000) {
+              const r = this.execBlock(blk.content, env);
+              if (r && r.type === "break") break;
+              if (r && r.type === "return") return r;
+              this.execStmt(parts[2], env);
+              guard++;
+            }
+            return null;
+          }
+
+          let guard = 0;
+          while (this.evalExpr(header, env) && guard < 1000) {
+            const r = this.execBlock(blk.content, env);
+            if (r && r.type === "break") break;
+            if (r && r.type === "return") return r;
+            guard++;
+          }
+          return null;
+        }
+
+        // 6. break / continue / return
+        if (s === "break") return { type: "break" };
+        if (s === "continue") return { type: "continue" };
+        if (s.startsWith("return ") || s === "return") {
+          const val = s.length > 6 ? this.evalExpr(s.slice(6).trim(), env) : undefined;
+          return { type: "return", value: val };
+        }
+
+        // 7. print(...)
+        const printMatch = s.match(/^print\s*\(([\s\S]*)\)$/);
+        if (printMatch) {
+          const args = this.splitTopLevelCommas(printMatch[1]);
+          const formatted = args.map(a => {
+            const v = this.evalExpr(a.trim(), env);
+            if (typeof v === "boolean") return v ? "1 (T)" : "0 (F)";
+            return String(v);
+          });
+          this.stdout.push({ type: "out", text: formatted.join(" ") });
+          return null;
+        }
+
+        // 8. Swap: x, y = y, x
+        const swapMatch = s.match(/^([A-Za-z_]\w*)\s*,\s*([A-Za-z_]\w*)\s*=\s*([A-Za-z_]\w*)\s*,\s*([A-Za-z_]\w*)$/);
+        if (swapMatch) {
+          const a = env.get(swapMatch[3]);
+          const b = env.get(swapMatch[4]);
+          env.set(swapMatch[1], a);
+          env.set(swapMatch[2], b);
+          return null;
+        }
+
+        // 9. Vector declaration: type name[] = ...
+        const vecDecl = s.match(/^(int|float|bool|string|[A-Za-z_]\w*)\s+([A-Za-z_]\w*)\s*(\[\])+(?:\s*=\s*([\s\S]+))?$/);
+        if (vecDecl) {
+          const vName = vecDecl[2];
+          const rhs = vecDecl[4];
+          if (rhs) {
+            env.set(vName, this.evalExpr(rhs.trim(), env));
+          } else {
+            env.set(vName, []);
+          }
+          return null;
+        }
+
+        // 10. Vector mutation: v.append(x), v.remove(i)
+        const vecMut = s.match(/^([A-Za-z_]\w*)\.(append|remove)\(([\s\S]*)\)$/);
+        if (vecMut) {
+          const arr = env.get(vecMut[1]);
+          const val = this.evalExpr(vecMut[3].trim(), env);
+          if (Array.isArray(arr)) {
+            if (vecMut[2] === "append") arr.push(val);
+            else if (vecMut[2] === "remove") arr.splice(Number(val), 1);
+          }
+          return null;
+        }
+
+        // 11. i++ / j--
+        const incMatch = s.match(/^([A-Za-z_]\w*)\s*(\+\+|--)$/);
+        if (incMatch) {
+          const cur = Number(env.get(incMatch[1]) || 0);
+          env.set(incMatch[1], incMatch[2] === "++" ? cur + 1 : cur - 1);
+          return null;
+        }
+
+        // 12. Assignment or Declaration + Assignment
+        const declAssign = s.match(/^(?:(int|float|bool|string|[A-Za-z_]\w*)\s+)?([A-Za-z_][\w.]*)\s*(\+=|-=|\*=|\/=|=)\s*([\s\S]+)$/);
+        if (declAssign) {
+          const explicitType = declAssign[1];
+          const lhs = declAssign[2];
+          const op = declAssign[3];
+          const rhsVal = this.evalExpr(declAssign[4].trim(), env, explicitType);
+
+          if (lhs.includes(".")) {
+            const parts = lhs.split(".");
+            let target = env.get(parts[0]);
+            for (let i = 1; i < parts.length - 1; i++) {
+              target = target[parts[i]];
+            }
+            const lastKey = parts[parts.length - 1];
+            if (op === "=") target[lastKey] = rhsVal;
+            else if (op === "+=") target[lastKey] += rhsVal;
+            else if (op === "-=") target[lastKey] -= rhsVal;
+            return null;
+          }
+
+          const cur = env.get(lhs) || 0;
+          if (op === "=") env.set(lhs, rhsVal);
+          else if (op === "+=") env.set(lhs, cur + rhsVal);
+          else if (op === "-=") env.set(lhs, cur - rhsVal);
+          else if (op === "*=") env.set(lhs, cur * rhsVal);
+          else if (op === "/=") env.set(lhs, cur / rhsVal);
+          return null;
+        }
+
+        // 13. Pure struct or primitive declaration: Point pt
+        const pureDecl = s.match(/^(int|float|bool|string|[A-Za-z_]\w*)\s+([A-Za-z_]\w*)$/);
+        if (pureDecl) {
+          const tName = pureDecl[1];
+          const vName = pureDecl[2];
+          if (this.runtimeStructs.has(tName)) {
+            env.set(vName, this.instantiateStruct(tName));
+          } else {
+            env.set(vName, tName === "string" ? "" : tName === "bool" ? false : 0);
+          }
+          return null;
+        }
+
+        // 14. Standalone expression (e.g., function call)
+        this.evalExpr(s, env);
+        return null;
+      }
+
+      evalExpr(expr, env, hintType = null) {
+        const e = expr.trim();
+
+        // 1. Ternary: val1 if cond else val2
+        const ternMatch = e.match(/^([\s\S]+?)\s+if\s+([\s\S]+?)\s+else\s+([\s\S]+)$/);
+        if (ternMatch) {
+          return this.evalExpr(ternMatch[2], env)
+            ? this.evalExpr(ternMatch[1], env)
+            : this.evalExpr(ternMatch[3], env);
+        }
+
+        // 2. input("prompt")
+        const inputMatch = e.match(/^input\s*\(([\s\S]*)\)$/);
+        if (inputMatch) {
+          const promptText = inputMatch[1].trim() ? this.evalExpr(inputMatch[1].trim(), env) : "";
+          const rawInput = this.stdinQueue.length > 0 ? this.stdinQueue.shift() : "10";
+          this.stdout.push({ type: "in", text: `${promptText}${rawInput}` });
+          if (hintType === "int" || (/^-?\d+$/.test(rawInput) && hintType !== "string")) {
+            return parseInt(rawInput, 10);
+          }
+          if (hintType === "float" || (/^-?\d+\.\d+$/.test(rawInput) && hintType !== "string")) {
+            return parseFloat(rawInput);
+          }
+          return String(rawInput);
+        }
+
+        // 3. Literals
+        if ((e.startsWith('"') && e.endsWith('"')) || (e.startsWith("'") && e.endsWith("'"))) {
+          return e.slice(1, -1);
+        }
+        if (e === "T") return true;
+        if (e === "F") return false;
+        if (/^-?\d+$/.test(e)) return parseInt(e, 10);
+        if (/^-?\d+\.\d+$/.test(e)) return parseFloat(e);
+
+        // 4. Array literal [1, 2, 3]
+        if (e.startsWith("[") && e.endsWith("]")) {
+          const inner = e.slice(1, -1).trim();
+          if (!inner) return [];
+          return this.splitTopLevelCommas(inner).map(item => this.evalExpr(item, env));
+        }
+
+        // 5. Slice: arr[a:b]
+        const sliceMatch = e.match(/^([A-Za-z_]\w*)\[([^:]+):([^\]]+)\]$/);
+        if (sliceMatch) {
+          const arr = env.get(sliceMatch[1]) || [];
+          const start = Number(this.evalExpr(sliceMatch[2], env));
+          const end = Number(this.evalExpr(sliceMatch[3], env));
+          return arr.slice(start, end);
+        }
+
+        // 6. Parentheses
+        if (e.startsWith("(") && this.findMatchingParen(e, 0) === e.length - 1) {
+          return this.evalExpr(e.slice(1, -1), env);
+        }
+
+        // 7. Logical NOT ~
+        if (e.startsWith("~")) {
+          return !this.evalExpr(e.slice(1), env);
+        }
+
+        // 8. Binary operators
+        const binSplit =
+          this.splitBinaryOp(e, ["?"]) ||
+          this.splitBinaryOp(e, ["^"]) ||
+          this.splitBinaryOp(e, ["==", "!=", "<=", ">=", "<", ">"]) ||
+          this.splitBinaryOp(e, ["+", "-"]) ||
+          this.splitBinaryOp(e, ["*", "/"]);
+
+        if (binSplit) {
+          const l = this.evalExpr(binSplit.left, env);
+          const r = this.evalExpr(binSplit.right, env);
+          switch (binSplit.op) {
+            case "?": return Boolean(l) || Boolean(r);
+            case "^": return Boolean(l) && Boolean(r);
+            case "==": return l === r;
+            case "!=": return l !== r;
+            case "<=": return l <= r;
+            case ">=": return l >= r;
+            case "<": return l < r;
+            case ">": return l > r;
+            case "+": return l + r;
+            case "-": return l - r;
+            case "*": return l * r;
+            case "/": return l / r;
+          }
+        }
+
+        // 9. Method call: obj.method(args)
+        const methodCall = e.match(/^([A-Za-z_]\w*)\.([A-Za-z_]\w*)\(([\s\S]*)\)$/);
+        if (methodCall) {
+          const objVal = env.get(methodCall[1]);
+          const mName = methodCall[2];
+          const args = methodCall[3].trim()
+            ? this.splitTopLevelCommas(methodCall[3]).map(a => this.evalExpr(a, env))
+            : [];
+
+          if (mName === "len" && Array.isArray(objVal)) {
+            return objVal.length;
+          }
+
+          const bindDef = this.runtimeBinds.find(b => b.name === mName);
+          if (bindDef) {
+            const localEnv = new Map(env);
+            localEnv.set("this", objVal);
+            bindDef.params.forEach((p, idx) => localEnv.set(p.name, args[idx]));
+            const res = this.execBlock(bindDef.body, localEnv);
+            return res && res.type === "return" ? res.value : undefined;
+          }
+        }
+
+        // 10. 2D / 1D Array access
+        const idx2D = e.match(/^([A-Za-z_]\w*)\[([^\]]+)\]\[([^\]]+)\]$/);
+        if (idx2D) {
+          const arr = env.get(idx2D[1]) || [];
+          const r = Number(this.evalExpr(idx2D[2], env));
+          const c = Number(this.evalExpr(idx2D[3], env));
+          return arr[r] ? arr[r][c] : undefined;
+        }
+
+        const idx1D = e.match(/^([A-Za-z_]\w*)\[([^\]]+)\]$/);
+        if (idx1D) {
+          const arr = env.get(idx1D[1]) || [];
+          const i = Number(this.evalExpr(idx1D[2], env));
+          return arr[i];
+        }
+
+        // 11. Function call with overloading resolution
+        const fnCall = e.match(/^([A-Za-z_]\w*)\(([\s\S]*)\)$/);
+        if (fnCall) {
+          const fnName = fnCall[1];
+          const args = fnCall[2].trim()
+            ? this.splitTopLevelCommas(fnCall[2]).map(a => this.evalExpr(a, env))
+            : [];
+
+          const candidates = this.runtimeFuncs.filter(f => f.name === fnName && f.params.length === args.length);
+          let chosenFn = candidates[0];
+          if (candidates.length > 1) {
+            chosenFn = candidates.find(f => {
+              return f.params.every((p, idx) => {
+                const aVal = args[idx];
+                if (aVal && typeof aVal === "object" && aVal.__struct) {
+                  return p.type === aVal.__struct;
+                }
+                return !this.runtimeStructs.has(p.type);
+              });
+            }) || candidates[0];
+          }
+
+          if (chosenFn) {
+            const localEnv = new Map(env);
+            chosenFn.params.forEach((p, idx) => localEnv.set(p.name, args[idx]));
+            const res = this.execBlock(chosenFn.body, localEnv);
+            return res && res.type === "return" ? res.value : undefined;
+          }
+        }
+
+        // 12. Property chain: this.p2.x or pt.x
+        if (e.includes(".")) {
+          const parts = e.split(".");
+          let cur = env.get(parts[0]);
+          for (let i = 1; i < parts.length; i++) {
+            if (cur == null) return 0;
+            cur = cur[parts[i]];
+          }
+          return cur;
+        }
+
+        // 13. Variable lookup
+        return env.has(e) ? env.get(e) : 0;
+      }
+
+      // =======================================================================
+      // PARSER HELPERS
+      // =======================================================================
+      splitStatements(text) {
+        const result = [];
+        let cur = "";
+        let paren = 0;
+        let bracket = 0;
+        let brace = 0;
+        let inStr = false;
+        let strChar = "";
+
+        for (let i = 0; i < text.length; i++) {
+          const ch = text[i];
+          if (inStr) {
+            cur += ch;
+            if (ch === strChar && text[i - 1] !== "\\") inStr = false;
+            continue;
+          }
+          if (ch === '"' || ch === "'") {
+            inStr = true;
+            strChar = ch;
+            cur += ch;
+            continue;
+          }
+          if (ch === "(") paren++;
+          else if (ch === ")") paren = Math.max(0, paren - 1);
+          else if (ch === "[") bracket++;
+          else if (ch === "]") bracket = Math.max(0, bracket - 1);
+          else if (ch === "{") brace++;
+          else if (ch === "}") {
+            brace = Math.max(0, brace - 1);
+            cur += ch;
+            if (brace === 0 && paren === 0 && bracket === 0) {
+              // Check if followed by else, helcio, or for (in do..for)
+              const rest = text.slice(i + 1).trimStart();
+              if (/^(else|helcio|for\s*\()/.test(rest)) {
+                continue;
+              }
+              result.push(cur.trim());
+              cur = "";
+            }
+            continue;
+          }
+
+          if ((ch === "\n" || ch === ";") && paren === 0 && bracket === 0 && brace === 0) {
+            if (cur.trim()) result.push(cur.trim());
+            cur = "";
+          } else {
+            cur += ch;
+          }
+        }
+        if (cur.trim()) result.push(cur.trim());
+        return result;
+      }
+
+      parseWdOptions(inner) {
+        const opts = [];
+        let i = 0;
+        while (i < inner.length) {
+          while (i < inner.length && /\s/.test(inner[i])) i++;
+          if (i >= inner.length) break;
+          const rest = inner.slice(i);
+          const m = rest.match(/^(?:opt|option)\s+([^{]+)\{/);
+          if (!m) break;
+          const guard = m[1].trim();
+          const braceIdx = i + m[0].length - 1;
+          const blk = this.extractBlock(inner, braceIdx);
+          opts.push({ guard, body: blk.content });
+          i = blk.endIdx;
+        }
+        return opts;
+      }
+
+      findMatchingParen(text, openIdx) {
+        let depth = 0;
+        let inStr = false;
+        let strChar = "";
+        for (let i = openIdx; i < text.length; i++) {
+          const ch = text[i];
+          if (inStr) {
+            if (ch === strChar && text[i - 1] !== "\\") inStr = false;
+            continue;
+          }
+          if (ch === '"' || ch === "'") {
+            inStr = true;
+            strChar = ch;
+            continue;
+          }
+          if (ch === "(") depth++;
+          else if (ch === ")") {
+            depth--;
+            if (depth === 0) return i;
+          }
+        }
+        return text.length - 1;
+      }
+
+      splitTopLevelCommas(str) {
+        const parts = [];
+        let cur = "";
+        let paren = 0;
+        let bracket = 0;
+        let inStr = false;
+        let strChar = "";
+
+        for (let i = 0; i < str.length; i++) {
+          const ch = str[i];
+          if (inStr) {
+            cur += ch;
+            if (ch === strChar && str[i - 1] !== "\\") inStr = false;
+            continue;
+          }
+          if (ch === '"' || ch === "'") {
+            inStr = true;
+            strChar = ch;
+            cur += ch;
+            continue;
+          }
+          if (ch === "(") paren++;
+          else if (ch === ")") paren--;
+          else if (ch === "[") bracket++;
+          else if (ch === "]") bracket--;
+          else if (ch === "," && paren === 0 && bracket === 0) {
+            parts.push(cur.trim());
+            cur = "";
+            continue;
+          }
+          cur += ch;
+        }
+        if (cur.trim()) parts.push(cur.trim());
+        return parts;
+      }
+
+      splitBinaryOp(expr, ops) {
+        let paren = 0;
+        let bracket = 0;
+        let inStr = false;
+        let strChar = "";
+
+        for (let i = expr.length - 1; i >= 0; i--) {
+          const ch = expr[i];
+          if (inStr) {
+            if (ch === strChar && expr[i - 1] !== "\\") inStr = false;
+            continue;
+          }
+          if (ch === '"' || ch === "'") {
+            inStr = true;
+            strChar = ch;
+            continue;
+          }
+          if (ch === ")") paren++;
+          else if (ch === "(") paren--;
+          else if (ch === "]") bracket++;
+          else if (ch === "[") bracket--;
+
+          if (paren === 0 && bracket === 0) {
+            for (const op of ops) {
+              if (expr.slice(i, i + op.length) === op) {
+                const left = expr.slice(0, i).trim();
+                const right = expr.slice(i + op.length).trim();
+                if (!left || !right) continue;
+                // Avoid splitting <=, >=, ==, != when checking < or >
+                if ((op === "<" || op === ">") && expr[i + 1] === "=") continue;
+                if ((op === "<" || op === ">") && (expr[i - 1] === "<" || expr[i - 1] === ">")) continue;
+                return { left, op, right };
+              }
+            }
+          }
+        }
+        return null;
+      }
+    }
+
+    // =========================================================================
+    // 3. UI CONTROLLER & SYNTAX HIGHLIGHTER
+    // =========================================================================
+    const presetSelect = document.getElementById("preset-select");
+    const sourceTextarea = document.getElementById("maphra-source");
+    const lineNumbersEl = document.getElementById("line-numbers");
+    const sourceFilenameEl = document.getElementById("source-filename");
+    const terminalOutputEl = document.getElementById("terminal-output");
+    const stdinInputEl = document.getElementById("stdin-values");
+    const btnCompileRun = document.getElementById("btn-compile-run");
+
+    function updateLineNumbers() {
+      const lines = sourceTextarea.value.split("\n").length;
+      const nums = [];
+      for (let i = 1; i <= lines; i++) nums.push(i);
+      lineNumbersEl.innerHTML = nums.join("<br/>");
+    }
+
+    function highlightThreeAddressC(cCode) {
+      const escaped = cCode
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
+      return escaped
+        .split("\n")
+        .map(line => {
+          if (line.trim().startsWith("/*") || line.trim().startsWith("//")) {
+            return `<span class="c-comment">${line}</span>`;
+          }
+          if (line.trim().startsWith("#")) {
+            return `<span class="c-preproc">${line}</span>`;
+          }
+          if (/^[A-Za-z_]\w*:$/.test(line.trim())) {
+            return `<span class="c-label">${line}</span>`;
+          }
+          // Separate trailing comment if any
+          let codePart = line;
+          let commentPart = "";
+          const cIdx = line.indexOf("//");
+          if (cIdx !== -1) {
+            codePart = line.slice(0, cIdx);
+            commentPart = `<span class="c-comment">${line.slice(cIdx)}</span>`;
+          }
+          codePart = codePart
+            .replace(/"([^"\\]*(\\.[^"\\]*)*)"/g, '<span class="c-str">"$1"</span>')
+            .replace(/\b(struct|int|float|char|void|bool|size_t|unsigned|long|if|goto|return|malloc|free|strcpy|strcat|printf|scanf|srand|rand|time)\b/g, '<span class="c-kw">$1</span>')
+            .replace(/\b(t\d+)\b/g, '<span class="c-temp">$1</span>')
+            .replace(/\b(L\d+|END)\b/g, '<span class="c-label">$1</span>');
+          return codePart + commentPart;
+        })
+        .join("\n");
+    }
+
+    function runCompiler() {
+      const src = sourceTextarea.value;
+      const stdinList = stdinInputEl.value
+        .split(",")
+        .map(s => s.trim())
+        .filter(Boolean);
+
+      const vm = new MaphraCompilerAndVM(stdinList);
+      try {
+        const res = vm.compileAndRun(src);
+
+        const tempEl = document.getElementById("temp-count");
+        if (tempEl) tempEl.textContent = `Temporários (tN): ${res.tempCount}`;
+        const labelEl = document.getElementById("label-count");
+        if (labelEl) labelEl.textContent = `Rótulos (LN): ${res.labelCount}`;
+        document.getElementById("scope-vars").textContent = `Variáveis na tabela de símbolos: ${res.varCount}`;
+        document.getElementById("exec-time").textContent = `Tempo: ${res.elapsed} ms`;
+        document.getElementById("exec-status").textContent = "Saída (exit 0)";
+
+        let termHtml = `<div class="term-cmd"><span>$</span> ./glf &lt; ${sourceFilenameEl.textContent} &gt; output.c &amp;&amp; gcc -o output output.c &amp;&amp; ./output</div>`;
+        termHtml += `<div class="term-lines">`;
+        for (const item of res.stdout) {
+          const safeText = item.text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+          if (item.type === "in") {
+            termHtml += `<div class="term-line-input">${safeText}</div>`;
+          } else {
+            termHtml += `<div>${safeText}</div>`;
+          }
+        }
+        termHtml += `</div>`;
+        terminalOutputEl.innerHTML = termHtml;
+      } catch (err) {
+        document.getElementById("exec-status").textContent = "Erro de Compilação";
+        terminalOutputEl.innerHTML = `<div class="term-error"><strong>Erro Sintático/Semântico:</strong> ${err.message}</div>`;
+      }
+    }
+
+    function loadPreset(key) {
+      const p = PRESETS[key];
+      if (!p) return;
+      sourceFilenameEl.textContent = p.filename;
+      sourceTextarea.value = p.code;
+      updateLineNumbers();
+      runCompiler();
+    }
+
+    presetSelect.addEventListener("change", () => loadPreset(presetSelect.value));
+    sourceTextarea.addEventListener("input", updateLineNumbers);
+    sourceTextarea.addEventListener("scroll", () => {
+      lineNumbersEl.scrollTop = sourceTextarea.scrollTop;
+    });
+    btnCompileRun.addEventListener("click", runCompiler);
+
+    // Initialize with exemplo.mpr
+    loadPreset("exemplo");
+  </script>
+</body>
+</html>

@@ -1,7 +1,8 @@
 # BDV E-commerce
 
 > **Categoria:** Graduação — Ciência da Computação (UFRRJ)  
-> **Repositório:** [github.com/ravsil/e-commerce](https://github.com/ravsil/e-commerce)
+> **Repositório:** [github.com/ravsil/e-commerce](https://github.com/ravsil/e-commerce)  
+> **Executar:** [▶ Abrir BDV E-commerce no Navegador](#run:e-commerce.md)
 
 **BDV E-commerce** é uma plataforma web completa de comércio eletrônico voltada para a venda de vestuário masculino e feminino. O sistema permite a navegação pelo catálogo de produtos, busca global em tempo real, gerenciamento de carrinho de compras (tanto para visitantes quanto para usuários autenticados, realizando a mesclagem automática ao fazer login), controle de estoque, painel administrativo e processamento de pagamentos.
 

@@ -1,0 +1,46 @@
+.red {
+    background-color: rgb(219, 142, 142) !important;
+}
+
+.red:hover,
+.red:active {
+    background-color: rgb(219, 100, 100) !important;
+}
+
+.yellow {
+    background-color: rgb(219, 205, 142) !important;
+}
+
+.yellow:hover,
+.yellow:active {
+    background-color: rgb(219, 200, 100) !important;
+}
+
+.green {
+    background-color: rgb(142, 219, 142) !important;
+}
+
+.green:hover,
+.green:active {
+    background-color: rgb(100, 219, 100) !important;
+}
+
+.gray {
+    background-color: rgb(220, 220, 220) !important;
+    border-radius: 5%;
+    padding: 1.5rem;
+    padding-top: 2.5em;
+    padding-bottom: 2.5em;
+    margin-bottom: 1rem;
+}
+
+.dark-gray {
+    background-color: rgb(182, 182, 182);
+    padding: 0.313rem;
+    border-radius: 10%;
+}
+
+
+.white-text {
+    color: white !important;
+}

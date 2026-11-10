@@ -1,0 +1,1532 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IM-3D — Visualizador 3D Interativo (UFRRJ Nova Iguaçu)</title>
+  <style>
+    :root {
+      --bg-dark: #0b0f19;
+      --panel-bg: rgba(15, 23, 42, 0.88);
+      --panel-border: rgba(148, 163, 184, 0.18);
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+      --accent-amber: #f59e0b;
+      --accent-emerald: #10b981;
+      --btn-bg: rgba(30, 41, 59, 0.85);
+      --btn-hover: rgba(51, 65, 85, 0.95);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--bg-dark);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: var(--text-main);
+    }
+
+    #canvas-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    canvas#gl-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+    }
+
+    canvas#gl-canvas:active {
+      cursor: grabbing;
+    }
+
+    /* 3D Projected Room Labels Layer */
+    #labels-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 5;
+    }
+
+    .room-label {
+      position: absolute;
+      transform: translate(-50%, -100%);
+      background: rgba(15, 23, 42, 0.86);
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      color: #f8fafc;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+      pointer-events: auto;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+      transition: background 0.15s, transform 0.15s, border-color 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .room-label:hover {
+      background: rgba(2, 132, 199, 0.95);
+      border-color: #fff;
+      transform: translate(-50%, -105%) scale(1.06);
+      z-index: 20;
+    }
+
+    .room-label .floor-badge {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 4px;
+      border-radius: 4px;
+      background: rgba(56, 189, 248, 0.22);
+      color: #7dd3fc;
+    }
+
+    .room-label.floor-1 .floor-badge { background: rgba(16, 185, 129, 0.25); color: #6ee7b7; }
+    .room-label.floor-2 .floor-badge { background: rgba(56, 189, 248, 0.25); color: #7dd3fc; }
+    .room-label.floor-3 .floor-badge { background: rgba(245, 158, 11, 0.25); color: #fcd34d; }
+
+    /* Top Navigation Bar */
+    #top-bar {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 16px;
+      background: var(--panel-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      z-index: 20;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+      flex-wrap: wrap;
+    }
+
+    .brand-block {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #0284c7, #10b981);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 14px;
+      letter-spacing: -0.5px;
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(16, 185, 129, 0.35);
+    }
+
+    .brand-title h1 {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: #f8fafc;
+    }
+
+    .brand-title p {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .map-tabs {
+      display: flex;
+      gap: 6px;
+      background: rgba(2, 6, 23, 0.6);
+      padding: 4px;
+      border-radius: 9px;
+      border: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    .map-tab {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 7px 13px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .map-tab:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .map-tab.active {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+    }
+
+    .map-tab .badge {
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 99px;
+      background: rgba(0, 0, 0, 0.3);
+      color: #bae6fd;
+    }
+
+    .cam-mode-switch {
+      display: flex;
+      gap: 6px;
+    }
+
+    .mode-btn {
+      background: var(--btn-bg);
+      border: 1px solid var(--panel-border);
+      color: var(--text-main);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 7px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .mode-btn:hover {
+      background: var(--btn-hover);
+      border-color: rgba(56, 189, 248, 0.4);
+    }
+
+    .mode-btn.active {
+      background: rgba(16, 185, 129, 0.2);
+      border-color: var(--accent-emerald);
+      color: #6ee7b7;
+    }
+
+    /* Side Panels */
+    .side-panel {
+      position: absolute;
+      top: 76px;
+      width: 290px;
+      max-height: calc(100vh - 92px);
+      overflow-y: auto;
+      background: var(--panel-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 14px;
+      z-index: 15;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .side-panel::-webkit-scrollbar {
+      width: 5px;
+    }
+    .side-panel::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.3);
+      border-radius: 4px;
+    }
+
+    #left-panel {
+      left: 12px;
+    }
+
+    #right-panel {
+      right: 12px;
+    }
+
+    .panel-section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    .panel-section:last-child {
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .btn-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .btn-grid.single-col {
+      grid-template-columns: 1fr;
+    }
+
+    .ui-btn {
+      background: var(--btn-bg);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      color: var(--text-main);
+      font-size: 11.5px;
+      font-weight: 500;
+      padding: 7px 9px;
+      border-radius: 7px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.14s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ui-btn:hover {
+      background: var(--btn-hover);
+      border-color: rgba(56, 189, 248, 0.45);
+    }
+
+    .ui-btn.active {
+      background: rgba(56, 189, 248, 0.2);
+      border-color: var(--accent);
+      color: #bae6fd;
+      font-weight: 600;
+    }
+
+    /* Sliders */
+    .slider-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .slider-val {
+      color: #f8fafc;
+      font-weight: 600;
+      font-family: monospace;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      cursor: pointer;
+      height: 5px;
+    }
+
+    /* Checkboxes */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-main);
+      cursor: pointer;
+      padding: 3px 0;
+    }
+
+    .toggle-row input[type="checkbox"] {
+      accent-color: var(--accent);
+      width: 15px;
+      height: 15px;
+      cursor: pointer;
+    }
+
+    /* Telemetry KV */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .stat-card {
+      background: rgba(2, 6, 23, 0.55);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      border-radius: 7px;
+      padding: 6px 8px;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .stat-value {
+      font-size: 13px;
+      font-weight: 700;
+      color: #f8fafc;
+      font-family: 'JetBrains Mono', monospace;
+      margin-top: 2px;
+    }
+
+    /* Legend items */
+    .legend-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #cbd5e1;
+    }
+
+    .legend-swatch {
+      width: 11px;
+      height: 11px;
+      border-radius: 3px;
+      flex-shrink: 0;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+
+    /* Bottom Controls Hint Bar */
+    #bottom-hud {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--panel-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--panel-border);
+      border-radius: 999px;
+      padding: 7px 18px;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      z-index: 15;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      white-space: nowrap;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+    }
+
+    #bottom-hud kbd {
+      background: rgba(30, 41, 59, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 10.5px;
+      color: #e2e8f0;
+      font-family: monospace;
+    }
+
+    @media (max-width: 980px) {
+      .side-panel {
+        width: 240px;
+      }
+      #bottom-hud {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container">
+    <canvas id="gl-canvas"></canvas>
+    <div id="labels-layer"></div>
+
+    <!-- Top Bar -->
+    <header id="top-bar">
+      <div class="brand-block">
+        <div class="brand-icon">IM3D</div>
+        <div class="brand-title">
+          <h1>Instituto Multidisciplinar — UFRRJ Nova Iguaçu</h1>
+          <p>Visualizador CSG 3D Interativo • Quake / TrenchBroom <code>.map</code></p>
+        </div>
+      </div>
+
+      <div class="map-tabs" role="tablist">
+        <button class="map-tab active" data-map="ufrrj" id="tab-ufrrj">
+          🏛️ Prédio do IM (ufrrj.map) <span class="badge">2.373 brushes</span>
+        </button>
+        <button class="map-tab" data-map="sala" id="tab-sala">
+          🪑 Sala de Aula (sala.map) <span class="badge">434 brushes</span>
+        </button>
+        <button class="map-tab" data-map="banheiro" id="tab-banheiro">
+          🚰 Banheiro (banheiro.map) <span class="badge">502 brushes</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Left Panel: Cutaway & Render Modes (Removed as requested) -->
+
+    <!-- Right Panel: Camera Presets & Telemetry (Removed as requested) -->
+
+    <!-- Bottom Controls Hint (Removed as requested) -->
+  </div>
+
+  <script src="maps_data.js"></script>
+  <script>
+  (function() {
+    "use strict";
+
+    const MAPS = window.IM3D_MAPS;
+    if (!MAPS) {
+      console.error("IM3D_MAPS data not found.");
+      return;
+    }
+
+    // Category color palette (RGB 0..1) and descriptions
+    const CATEGORIES = {
+      0: { name: "Paredes / Estrutura", hex: "#cbd5e1", rgb: [0.80, 0.84, 0.89] },
+      1: { name: "Pisos / Lajes",       hex: "#64748b", rgb: [0.42, 0.48, 0.56] },
+      2: { name: "Telhado / Cobertura", hex: "#d97706", rgb: [0.85, 0.47, 0.04] },
+      3: { name: "Rampas / Escadas / Bancada", hex: "#eab308", rgb: [0.92, 0.70, 0.05] },
+      4: { name: "Corrimões / Metais",  hex: "#38bdf8", rgb: [0.22, 0.74, 0.97] },
+      5: { name: "Letreiro UFRRJ / Espelhos", hex: "#10b981", rgb: [0.06, 0.73, 0.51] },
+      6: { name: "Salas / Cabines / Assentos", hex: "#60a5fa", rgb: [0.38, 0.65, 0.98] },
+      7: { name: "Auditório / Biblioteca", hex: "#a78bfa", rgb: [0.65, 0.55, 0.98] },
+      8: { name: "Coordenações / Quadro", hex: "#34d399", rgb: [0.20, 0.83, 0.60] },
+      9: { name: "Mobiliário (Madeira)", hex: "#f59e0b", rgb: [0.90, 0.58, 0.12] },
+      10:{ name: "Louças / Porcelana",  hex: "#f8fafc", rgb: [0.97, 0.98, 0.99] }
+    };
+
+    // Map-specific UI configurations
+    const MAP_CONFIGS = {
+      ufrrj: {
+        title: "Prédio do IM — UFRRJ Nova Iguaçu",
+        defaultCutSlabs: false,
+        floorPresets: [
+          { label: "🏢 Todos os Andares", zMin: -34, zMax: 192, cutSlabs: false },
+          { label: "🔓 3º Andar (Sem Teto)", zMin: -34, zMax: 176, cutSlabs: true },
+          { label: "2️⃣ Até 2º Andar", zMin: -34, zMax: 112, cutSlabs: true },
+          { label: "1️⃣ 1º Andar (Térreo)", zMin: -34, zMax: 48, cutSlabs: true },
+          { label: "🔍 Isolar 2º Andar", zMin: 48, zMax: 112, cutSlabs: true },
+          { label: "🔍 Isolar 3º Andar", zMin: 112, zMax: 176, cutSlabs: true }
+        ],
+        cameraPresets: [
+          { label: "📐 Vista Isométrica Geral", target: [245, 50, 60], yaw: -0.95, pitch: 0.52, dist: 1950 },
+          { label: "🏛️ Fachada & Letreiro UFRRJ", target: [242, -760, 35], yaw: -1.57, pitch: 0.25, dist: 620 },
+          { label: "🌀 Rampa Central & Pátio", target: [250, 272, 75], yaw: -0.65, pitch: 0.45, dist: 520 },
+          { label: "🪜 Escadaria Principal", target: [250, 272, 65], yaw: 2.35, pitch: 0.38, dist: 360 },
+          { label: "📚 Biblioteca & Estudos (2º Andar)", target: [60, -390, 95], yaw: -0.8, pitch: 0.55, dist: 560, zMax: 112 },
+          { label: "🎭 Auditório & Laboratórios", target: [260, 920, 45], yaw: 0.85, pitch: 0.52, dist: 680 },
+          { label: "🗺️ Planta Superior (Top-Down)", target: [245, 50, 60], yaw: -1.57, pitch: 1.55, dist: 2200 }
+        ],
+        legendCats: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+      },
+      sala: {
+        title: "Sala de Aula — UFRRJ IM",
+        defaultCutSlabs: true,
+        floorPresets: [
+          { label: "🔓 Vista Interna (Sem Teto)", zMin: -13, zMax: 80, cutSlabs: true },
+          { label: "🏢 Completo (Com Teto)", zMin: -13, zMax: 96, cutSlabs: false },
+          { label: "🪑 Corte Mobiliário (Z≤30)", zMin: -13, zMax: 30, cutSlabs: false }
+        ],
+        cameraPresets: [
+          { label: "📐 Vista Isométrica (Sem Teto)", target: [48, 16, 20], yaw: -0.75, pitch: 0.62, dist: 380, zMax: 80 },
+          { label: "👨‍🏫 Visão do Professor (Frente)", target: [40, -20, 22], yaw: 1.57, pitch: 0.18, dist: 190, zMax: 96 },
+          { label: "🧑‍🎓 Visão do Aluno (Fundo)", target: [48, 140, 32], yaw: -1.57, pitch: 0.15, dist: 240, zMax: 96 },
+          { label: "🗺️ Planta Baixa da Sala", target: [48, 16, 15], yaw: -1.57, pitch: 1.55, dist: 420, zMax: 80 }
+        ],
+        legendCats: [0, 1, 8, 9, 6, 4, 5]
+      },
+      banheiro: {
+        title: "Banheiro — UFRRJ IM",
+        defaultCutSlabs: true,
+        floorPresets: [
+          { label: "🔓 Vista Completa", zMin: 0, zMax: 96, cutSlabs: false },
+          { label: "🚰 Corte Bancada & Cabines (Z≤64)", zMin: 0, zMax: 64, cutSlabs: false }
+        ],
+        cameraPresets: [
+          { label: "📐 Vista Isométrica Geral", target: [16, -96, 36], yaw: -0.75, pitch: 0.65, dist: 390 },
+          { label: "🚰 Bancada com 5 Pias & Torneiras", target: [-88, -80, 34], yaw: 0.15, pitch: 0.35, dist: 145 },
+          { label: "🚪 Cabines Sanitárias", target: [96, -95, 42], yaw: 2.6, pitch: 0.48, dist: 210 },
+          { label: "🗺️ Planta Superior", target: [16, -96, 30], yaw: -1.57, pitch: 1.55, dist: 420 }
+        ],
+        legendCats: [0, 1, 10, 3, 4, 6, 5]
+      }
+    };
+
+    // Setup WebGL Canvas
+    const canvas = document.getElementById("gl-canvas");
+    const gl = canvas.getContext("webgl", { antialias: true, alpha: false, depth: true });
+    if (!gl) {
+      alert("WebGL não disponível neste navegador.");
+      return;
+    }
+    // Enable OES_element_index_uint if needed
+    gl.getExtension("OES_element_index_uint");
+
+    // Vertex & Fragment Shaders for Solid Lit Faces
+    const vsSolidSource = `
+      attribute vec3 aPos;
+      attribute vec3 aNormal;
+      attribute vec3 aColor;
+      attribute vec2 aBrushZ;
+
+      uniform mat4 uMVP;
+
+      varying vec3 vWorldPos;
+      varying vec3 vNormal;
+      varying vec3 vColor;
+      varying vec2 vBrushZ;
+
+      void main() {
+        vWorldPos = aPos;
+        vNormal = aNormal;
+        vColor = aColor;
+        vBrushZ = aBrushZ;
+        gl_Position = uMVP * vec4(aPos, 1.0);
+      }
+    `;
+
+    const fsSolidSource = `
+      precision highp float;
+
+      varying vec3 vWorldPos;
+      varying vec3 vNormal;
+      varying vec3 vColor;
+      varying vec2 vBrushZ;
+
+      uniform vec2 uZClip;
+      uniform float uCutSlabs;
+      uniform int uRenderMode;
+      uniform float uShowUVGrid;
+      uniform vec2 uMapZBounds;
+
+      void main() {
+        if (vWorldPos.z > uZClip.y + 0.05 || vWorldPos.z < uZClip.x - 0.05) {
+          discard;
+        }
+        if (uCutSlabs > 0.5 && vBrushZ.x >= uZClip.y - 0.5) {
+          discard;
+        }
+
+        vec3 N = normalize(vNormal);
+
+        // Directional sun + sky/ground hemisphere lighting
+        vec3 L1 = normalize(vec3(-0.48, -0.62, 0.62));
+        vec3 L2 = normalize(vec3(0.55, 0.35, 0.75));
+        float diff1 = max(dot(N, L1), 0.0);
+        float diff2 = max(dot(N, L2), 0.0);
+        float hemi = 0.5 + 0.5 * N.z;
+        float lighting = 0.38 + 0.44 * diff1 + 0.18 * diff2 + 0.12 * hemi;
+
+        if (uRenderMode == 1) {
+          // Normal + Height map mode
+          float hNorm = clamp((vWorldPos.z - uMapZBounds.x) / max(uMapZBounds.y - uMapZBounds.x, 1.0), 0.0, 1.0);
+          vec3 normCol = 0.5 + 0.5 * N;
+          vec3 heightCol = mix(vec3(0.1, 0.5, 0.95), vec3(0.98, 0.55, 0.12), hNorm);
+          vec3 col = mix(normCol, heightCol, 0.45) * (0.65 + 0.35 * diff1);
+          gl_FragColor = vec4(col, 1.0);
+          return;
+        }
+
+        vec3 baseCol = vColor;
+
+        // TrenchBroom / Quake procedural 16u & 64u world-space UV grid
+        if (uShowUVGrid > 0.5 && uRenderMode == 0) {
+          vec2 uv;
+          if (abs(N.z) > 0.7) {
+            uv = vWorldPos.xy;
+          } else if (abs(N.x) > abs(N.y)) {
+            uv = vWorldPos.yz;
+          } else {
+            uv = vWorldPos.xz;
+          }
+          vec2 g16 = abs(fract(uv / 16.0 - 0.5) - 0.5) / (1.0 / 16.0);
+          float d16 = min(g16.x, g16.y);
+          float line16 = 1.0 - smoothstep(0.0, 0.65, d16);
+
+          vec2 g64 = abs(fract(uv / 64.0 - 0.5) - 0.5) / (1.0 / 64.0);
+          float d64 = min(g64.x, g64.y);
+          float line64 = 1.0 - smoothstep(0.0, 0.85, d64);
+
+          // Checkerboard sub-tint per 32u cell
+          float chk = mod(floor(uv.x / 32.0) + floor(uv.y / 32.0), 2.0);
+          baseCol *= (0.97 + 0.03 * chk);
+          baseCol = mix(baseCol, baseCol * 0.86, line16 * 0.35);
+          baseCol = mix(baseCol, baseCol * 0.74, line64 * 0.55);
+        }
+
+        vec3 finalCol = baseCol * lighting;
+
+        if (uRenderMode == 3) {
+          // X-Ray translucent mode
+          gl_FragColor = vec4(finalCol * 1.15, 0.26);
+        } else if (uRenderMode == 2) {
+          // Dark wireframe hull backing
+          gl_FragColor = vec4(baseCol * 0.22, 1.0);
+        } else {
+          gl_FragColor = vec4(finalCol, 1.0);
+        }
+      }
+    `;
+
+    // Vertex & Fragment Shaders for Edges & Reference Grid
+    const vsLineSource = `
+      attribute vec3 aPos;
+      attribute vec3 aColor;
+      attribute vec2 aBrushZ;
+
+      uniform mat4 uMVP;
+      uniform float uDepthBias;
+
+      varying vec3 vWorldPos;
+      varying vec3 vColor;
+      varying vec2 vBrushZ;
+
+      void main() {
+        vWorldPos = aPos;
+        vColor = aColor;
+        vBrushZ = aBrushZ;
+        vec4 clip = uMVP * vec4(aPos, 1.0);
+        clip.z -= uDepthBias * clip.w;
+        gl_Position = clip;
+      }
+    `;
+
+    const fsLineSource = `
+      precision highp float;
+
+      varying vec3 vWorldPos;
+      varying vec3 vColor;
+      varying vec2 vBrushZ;
+
+      uniform vec2 uZClip;
+      uniform float uCutSlabs;
+      uniform float uAlpha;
+      uniform float uIsGrid;
+
+      void main() {
+        if (uIsGrid < 0.5) {
+          if (vWorldPos.z > uZClip.y + 0.08 || vWorldPos.z < uZClip.x - 0.08) {
+            discard;
+          }
+          if (uCutSlabs > 0.5 && vBrushZ.x >= uZClip.y - 0.5) {
+            discard;
+          }
+        }
+        gl_FragColor = vec4(vColor, uAlpha);
+      }
+    `;
+
+    function compileShader(type, src) {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+        console.error(gl.getShaderInfoLog(s));
+      }
+      return s;
+    }
+
+    function createProgram(vs, fs) {
+      const p = gl.createProgram();
+      gl.attachShader(p, compileShader(gl.VERTEX_SHADER, vs));
+      gl.attachShader(p, compileShader(gl.FRAGMENT_SHADER, fs));
+      gl.linkProgram(p);
+      if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
+        console.error(gl.getProgramInfoLog(p));
+      }
+      return p;
+    }
+
+    const progSolid = createProgram(vsSolidSource, fsSolidSource);
+    const progLine = createProgram(vsLineSource, fsLineSource);
+
+    const locSolid = {
+      aPos: gl.getAttribLocation(progSolid, "aPos"),
+      aNormal: gl.getAttribLocation(progSolid, "aNormal"),
+      aColor: gl.getAttribLocation(progSolid, "aColor"),
+      aBrushZ: gl.getAttribLocation(progSolid, "aBrushZ"),
+      uMVP: gl.getUniformLocation(progSolid, "uMVP"),
+      uZClip: gl.getUniformLocation(progSolid, "uZClip"),
+      uCutSlabs: gl.getUniformLocation(progSolid, "uCutSlabs"),
+      uRenderMode: gl.getUniformLocation(progSolid, "uRenderMode"),
+      uShowUVGrid: gl.getUniformLocation(progSolid, "uShowUVGrid"),
+      uMapZBounds: gl.getUniformLocation(progSolid, "uMapZBounds")
+    };
+
+    const locLine = {
+      aPos: gl.getAttribLocation(progLine, "aPos"),
+      aColor: gl.getAttribLocation(progLine, "aColor"),
+      aBrushZ: gl.getAttribLocation(progLine, "aBrushZ"),
+      uMVP: gl.getUniformLocation(progLine, "uMVP"),
+      uDepthBias: gl.getUniformLocation(progLine, "uDepthBias"),
+      uZClip: gl.getUniformLocation(progLine, "uZClip"),
+      uCutSlabs: gl.getUniformLocation(progLine, "uCutSlabs"),
+      uAlpha: gl.getUniformLocation(progLine, "uAlpha"),
+      uIsGrid: gl.getUniformLocation(progLine, "uIsGrid")
+    };
+
+    // Build GPU buffers for each map once (cached)
+    const gpuCache = {};
+
+    function getMapBuffers(mapKey) {
+      if (gpuCache[mapKey]) return gpuCache[mapKey];
+      const m = MAPS[mapKey];
+      const V = m.verts;
+
+      // Count total triangle vertices and edge vertices
+      let triVertCount = 0;
+      let edgeVertCount = 0;
+      for (let b = 0; b < m.brushes.length; b++) {
+        const faces = m.brushes[b][3];
+        for (let f = 0; f < faces.length; f++) {
+          const n = faces[f].length;
+          triVertCount += (n - 2) * 3;
+          edgeVertCount += n * 2;
+        }
+      }
+
+      // Interleaved solid array: [x,y,z, nx,ny,nz, r,g,b, zMin,zMax] = 11 floats per vertex
+      const solidData = new Float32Array(triVertCount * 11);
+      // Interleaved edge array: [x,y,z, r,g,b, zMin,zMax] = 8 floats per vertex
+      const edgeData = new Float32Array(edgeVertCount * 8);
+
+      let sPtr = 0;
+      let ePtr = 0;
+
+      for (let b = 0; b < m.brushes.length; b++) {
+        const brush = m.brushes[b];
+        const cat = brush[0];
+        const zMin = brush[1];
+        const zMax = brush[2];
+        const faces = brush[3];
+        const col = (CATEGORIES[cat] || CATEGORIES[0]).rgb;
+
+        // Slightly vary brightness per brush for crisp CSG visual separation
+        const shadeVar = 0.96 + 0.08 * ((b * 17) % 11) / 10.0;
+        const cr = Math.min(1.0, col[0] * shadeVar);
+        const cg = Math.min(1.0, col[1] * shadeVar);
+        const cb = Math.min(1.0, col[2] * shadeVar);
+
+        // Edge color: darker architectural outline or bright cyan/amber for accents
+        const er = Math.min(1.0, cr * 0.32 + 0.06);
+        const eg = Math.min(1.0, cg * 0.35 + 0.08);
+        const eb = Math.min(1.0, cb * 0.40 + 0.12);
+
+        for (let f = 0; f < faces.length; f++) {
+          const face = faces[f];
+          const flen = face.length;
+          const i0 = face[0] * 3;
+          const x0 = V[i0], y0 = V[i0 + 1], z0 = V[i0 + 2];
+
+          // Compute Newell polygon normal across all triangles of the face
+          let nx = 0, ny = 0, nz = 0;
+          for (let k = 1; k < flen - 1; k++) {
+            const i1 = face[k] * 3;
+            const i2 = face[k + 1] * 3;
+            const ux = V[i1] - x0, uy = V[i1 + 1] - y0, uz = V[i1 + 2] - z0;
+            const vx = V[i2] - x0, vy = V[i2 + 1] - y0, vz = V[i2 + 2] - z0;
+            nx += uy * vz - uz * vy;
+            ny += uz * vx - ux * vz;
+            nz += ux * vy - uy * vx;
+          }
+          const nLen = Math.hypot(nx, ny, nz) || 1.0;
+          nx /= nLen; ny /= nLen; nz /= nLen;
+
+          // Fan triangulation
+          for (let k = 1; k < flen - 1; k++) {
+            const indices = [face[0], face[k], face[k + 1]];
+            for (let t = 0; t < 3; t++) {
+              const vi = indices[t] * 3;
+              solidData[sPtr++] = V[vi];
+              solidData[sPtr++] = V[vi + 1];
+              solidData[sPtr++] = V[vi + 2];
+              solidData[sPtr++] = nx;
+              solidData[sPtr++] = ny;
+              solidData[sPtr++] = nz;
+              solidData[sPtr++] = cr;
+              solidData[sPtr++] = cg;
+              solidData[sPtr++] = cb;
+              solidData[sPtr++] = zMin;
+              solidData[sPtr++] = zMax;
+            }
+          }
+
+          // Polygon boundary edges
+          for (let k = 0; k < flen; k++) {
+            const vA = face[k] * 3;
+            const vB = face[(k + 1) % flen] * 3;
+
+            edgeData[ePtr++] = V[vA];
+            edgeData[ePtr++] = V[vA + 1];
+            edgeData[ePtr++] = V[vA + 2];
+            edgeData[ePtr++] = er;
+            edgeData[ePtr++] = eg;
+            edgeData[ePtr++] = eb;
+            edgeData[ePtr++] = zMin;
+            edgeData[ePtr++] = zMax;
+
+            edgeData[ePtr++] = V[vB];
+            edgeData[ePtr++] = V[vB + 1];
+            edgeData[ePtr++] = V[vB + 2];
+            edgeData[ePtr++] = er;
+            edgeData[ePtr++] = eg;
+            edgeData[ePtr++] = eb;
+            edgeData[ePtr++] = zMin;
+            edgeData[ePtr++] = zMax;
+          }
+        }
+      }
+
+      // Build reference floor grid buffer
+      const bbox = m.bbox;
+      const pad = 128;
+      const gx0 = Math.floor((bbox[0][0] - pad) / 64) * 64;
+      const gx1 = Math.ceil((bbox[1][0] + pad) / 64) * 64;
+      const gy0 = Math.floor((bbox[0][1] - pad) / 64) * 64;
+      const gy1 = Math.ceil((bbox[1][1] + pad) / 64) * 64;
+      const gz = bbox[0][2] - 0.2;
+      const step = (mapKey === "ufrrj") ? 64 : 16;
+
+      const gridLines = [];
+      function pushGridLine(x1, y1, z1, x2, y2, z2, r, g, b) {
+        gridLines.push(x1, y1, z1, r, g, b, -9999, 9999);
+        gridLines.push(x2, y2, z2, r, g, b, -9999, 9999);
+      }
+
+      for (let x = gx0; x <= gx1; x += step) {
+        const major = (x % (step * 4) === 0);
+        const c = x === 0 ? [0.15, 0.65, 0.35] : (major ? [0.22, 0.30, 0.42] : [0.13, 0.18, 0.26]);
+        pushGridLine(x, gy0, gz, x, gy1, gz, c[0], c[1], c[2]);
+      }
+      for (let y = gy0; y <= gy1; y += step) {
+        const major = (y % (step * 4) === 0);
+        const c = y === 0 ? [0.75, 0.22, 0.25] : (major ? [0.22, 0.30, 0.42] : [0.13, 0.18, 0.26]);
+        pushGridLine(gx0, y, gz, gx1, y, gz, c[0], c[1], c[2]);
+      }
+
+      const solidBuf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, solidBuf);
+      gl.bufferData(gl.ARRAY_BUFFER, solidData, gl.STATIC_DRAW);
+
+      const edgeBuf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, edgeBuf);
+      gl.bufferData(gl.ARRAY_BUFFER, edgeData, gl.STATIC_DRAW);
+
+      const gridData = new Float32Array(gridLines);
+      const gridBuf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, gridBuf);
+      gl.bufferData(gl.ARRAY_BUFFER, gridData, gl.STATIC_DRAW);
+
+      const entry = {
+        solidBuf,
+        triVertCount,
+        edgeBuf,
+        edgeVertCount,
+        gridBuf,
+        gridVertCount: gridLines.length / 8
+      };
+      gpuCache[mapKey] = entry;
+      return entry;
+    }
+
+    // Viewer State
+    const state = {
+      mapKey: "ufrrj",
+      camMode: "orbit", // 'orbit' | 'fly'
+      renderMode: 0,
+      showEdges: true,
+      showUVGrid: true,
+      showGrid: true,
+      showLabels: true,
+      zMin: -34,
+      zMax: 192,
+      cutSlabs: false,
+      // Orbit camera state
+      target: [245, 50, 60],
+      yaw: -0.95,
+      pitch: 0.52,
+      dist: 1950,
+      // Fly camera state (eye position)
+      eye: [0, 0, 0],
+      flySpeed: 220,
+      keys: {}
+    };
+
+    function syncEyeFromOrbit() {
+      const cp = Math.cos(state.pitch);
+      const sp = Math.sin(state.pitch);
+      const cy = Math.cos(state.yaw);
+      const sy = Math.sin(state.yaw);
+      state.eye[0] = state.target[0] - state.dist * cp * cy;
+      state.eye[1] = state.target[1] - state.dist * cp * sy;
+      state.eye[2] = state.target[2] + state.dist * sp;
+    }
+
+    function syncOrbitFromEye() {
+      const cp = Math.cos(state.pitch);
+      const sp = Math.sin(state.pitch);
+      const cy = Math.cos(state.yaw);
+      const sy = Math.sin(state.yaw);
+      state.target[0] = state.eye[0] + state.dist * cp * cy;
+      state.target[1] = state.eye[1] + state.dist * cp * sy;
+      state.target[2] = state.eye[2] - state.dist * sp;
+    }
+
+    // Matrix Math Helpers (Column-Major 4x4)
+    function mat4Perspective(fovRad, aspect, near, far) {
+      const f = 1.0 / Math.tan(fovRad * 0.5);
+      const nf = 1.0 / (near - far);
+      return new Float32Array([
+        f / aspect, 0, 0, 0,
+        0, f, 0, 0,
+        0, 0, (far + near) * nf, -1,
+        0, 0, (2 * far * near) * nf, 0
+      ]);
+    }
+
+    function mat4LookAtZUp(eye, center, up) {
+      let fx = center[0] - eye[0];
+      let fy = center[1] - eye[1];
+      let fz = center[2] - eye[2];
+      let flen = Math.hypot(fx, fy, fz) || 1;
+      fx /= flen; fy /= flen; fz /= flen;
+
+      let sx = fy * up[2] - fz * up[1];
+      let sy = fz * up[0] - fx * up[2];
+      let sz = fx * up[1] - fy * up[0];
+      let slen = Math.hypot(sx, sy, sz);
+      if (slen < 1e-5) {
+        sx = 1; sy = 0; sz = 0;
+      } else {
+        sx /= slen; sy /= slen; sz /= slen;
+      }
+
+      const ux = sy * fz - sz * fy;
+      const uy = sz * fx - sx * fz;
+      const uz = sx * fy - sy * fx;
+
+      return new Float32Array([
+        sx, ux, -fx, 0,
+        sy, uy, -fy, 0,
+        sz, uz, -fz, 0,
+        -(sx * eye[0] + sy * eye[1] + sz * eye[2]),
+        -(ux * eye[0] + uy * eye[1] + uz * eye[2]),
+        fx * eye[0] + fy * eye[1] + fz * eye[2],
+        1
+      ]);
+    }
+
+    function mat4Mul(a, b) {
+      const out = new Float32Array(16);
+      for (let c = 0; c < 4; c++) {
+        for (let r = 0; r < 4; r++) {
+          out[c * 4 + r] =
+            a[0 * 4 + r] * b[c * 4 + 0] +
+            a[1 * 4 + r] * b[c * 4 + 1] +
+            a[2 * 4 + r] * b[c * 4 + 2] +
+            a[3 * 4 + r] * b[c * 4 + 3];
+        }
+      }
+      return out;
+    }
+
+    // UI Elements & Binding
+    const sliderZMax = document.getElementById("slider-zmax");
+    const sliderZMin = document.getElementById("slider-zmin");
+    const valZMax = document.getElementById("val-zmax");
+    const valZMin = document.getElementById("val-zmin");
+    const floorPresetsEl = document.getElementById("floor-presets");
+    const camPresetsEl = document.getElementById("camera-presets");
+    const legendContainer = document.getElementById("legend-container");
+    const labelsLayer = document.getElementById("labels-layer");
+
+    let activeLabelEls = [];
+
+    function rebuildRoomLabels() {
+      labelsLayer.innerHTML = "";
+      activeLabelEls = [];
+      const m = MAPS[state.mapKey];
+      if (!m.labels) return;
+      m.labels.forEach((lbl) => {
+        const div = document.createElement("div");
+        div.className = `room-label floor-${lbl.floor || 1}`;
+        div.innerHTML = `<span class="floor-badge">${lbl.floor}ºA</span><span>${lbl.name}</span>`;
+        div.addEventListener("click", (e) => {
+          e.stopPropagation();
+          state.target = [lbl.pos[0], lbl.pos[1], lbl.pos[2]];
+          state.dist = Math.min(state.dist, state.mapKey === "ufrrj" ? 380 : 160);
+          syncEyeFromOrbit();
+        });
+        labelsLayer.appendChild(div);
+        activeLabelEls.push({ el: div, data: lbl });
+      });
+    }
+
+    function applyZClip(zMin, zMax, cutSlabs) {
+      state.zMin = zMin;
+      state.zMax = zMax;
+      state.cutSlabs = !!cutSlabs;
+      if (sliderZMin) sliderZMin.value = zMin;
+      if (sliderZMax) sliderZMax.value = zMax;
+      if (valZMin) valZMin.textContent = zMin.toFixed(1).replace(/\.0$/, "");
+      if (valZMax) valZMax.textContent = zMax.toFixed(1).replace(/\.0$/, "");
+    }
+
+    function loadMap(mapKey) {
+      state.mapKey = mapKey;
+      const m = MAPS[mapKey];
+      const cfg = MAP_CONFIGS[mapKey];
+
+      // Update active tab
+      document.querySelectorAll(".map-tab").forEach((b) => {
+        b.classList.toggle("active", b.dataset.map === mapKey);
+      });
+
+      // Configure Z sliders
+      const minZ = Math.floor(m.bbox[0][2]);
+      const maxZ = Math.ceil(m.bbox[1][2]);
+      if (sliderZMin) { sliderZMin.min = minZ; sliderZMin.max = maxZ; }
+      if (sliderZMax) { sliderZMax.min = minZ; sliderZMax.max = maxZ; }
+
+      // Build floor cutaway buttons
+      if (floorPresetsEl) {
+        floorPresetsEl.innerHTML = "";
+        cfg.floorPresets.forEach((fp, idx) => {
+          const btn = document.createElement("button");
+          btn.className = "ui-btn" + (idx === 0 ? " active" : "");
+          btn.textContent = fp.label;
+          btn.addEventListener("click", () => {
+            floorPresetsEl.querySelectorAll(".ui-btn").forEach((x) => x.classList.remove("active"));
+            btn.classList.add("active");
+            applyZClip(fp.zMin, fp.zMax, fp.cutSlabs);
+          });
+          floorPresetsEl.appendChild(btn);
+        });
+      }
+
+      // Apply first floor preset
+      const fp0 = cfg.floorPresets[0];
+      applyZClip(fp0.zMin, fp0.zMax, fp0.cutSlabs);
+
+      // Build camera preset buttons
+      if (camPresetsEl) {
+        camPresetsEl.innerHTML = "";
+        cfg.cameraPresets.forEach((cp, idx) => {
+          const btn = document.createElement("button");
+          btn.className = "ui-btn" + (idx === 0 ? " active" : "");
+          btn.textContent = cp.label;
+          btn.addEventListener("click", () => {
+            camPresetsEl.querySelectorAll(".ui-btn").forEach((x) => x.classList.remove("active"));
+            btn.classList.add("active");
+            state.target = cp.target.slice();
+            state.yaw = cp.yaw;
+            state.pitch = cp.pitch;
+            state.dist = cp.dist;
+            if (cp.zMax !== undefined) {
+              applyZClip(minZ, cp.zMax, cp.zMax < maxZ);
+            }
+            syncEyeFromOrbit();
+          });
+          camPresetsEl.appendChild(btn);
+        });
+      }
+
+      // Apply first camera preset
+      const cp0 = cfg.cameraPresets[0];
+      state.target = cp0.target.slice();
+      state.yaw = cp0.yaw;
+      state.pitch = cp0.pitch;
+      state.dist = cp0.dist;
+      syncEyeFromOrbit();
+
+      // Build legend
+      if (legendContainer) {
+        legendContainer.innerHTML = "";
+        cfg.legendCats.forEach((catId) => {
+          const c = CATEGORIES[catId];
+          if (!c) return;
+          const item = document.createElement("div");
+          item.className = "legend-item";
+          item.innerHTML = `<span class="legend-swatch" style="background:${c.hex}"></span><span>${c.name}</span>`;
+          legendContainer.appendChild(item);
+        });
+      }
+
+      // Update telemetry
+      const statBrushes = document.getElementById("stat-brushes");
+      if (statBrushes) statBrushes.textContent = m.brushCount.toLocaleString("pt-BR");
+      const statFaces = document.getElementById("stat-faces");
+      if (statFaces) statFaces.textContent = m.faceCount.toLocaleString("pt-BR");
+      const statTris = document.getElementById("stat-tris");
+      if (statTris) statTris.textContent = m.triCount.toLocaleString("pt-BR");
+      const statVerts = document.getElementById("stat-verts");
+      if (statVerts) statVerts.textContent = m.vertCount.toLocaleString("pt-BR");
+      const statBbox = document.getElementById("stat-bbox");
+      if (statBbox) {
+        const dx = Math.round(m.bbox[1][0] - m.bbox[0][0]);
+        const dy = Math.round(m.bbox[1][1] - m.bbox[0][1]);
+        const dz = Math.round(m.bbox[1][2] - m.bbox[0][2]);
+        statBbox.textContent = `${dx} × ${dy} × ${dz} u`;
+      }
+
+      rebuildRoomLabels();
+      getMapBuffers(mapKey);
+    }
+
+    // Bind Top Tabs
+    document.querySelectorAll(".map-tab").forEach((btn) => {
+      btn.addEventListener("click", () => loadMap(btn.dataset.map));
+    });
+
+    // Camera Mode (Orbit default)
+    state.camMode = "orbit";
+
+    // Bind Z Sliders
+    sliderZMax?.addEventListener("input", () => {
+      const v = parseFloat(sliderZMax.value);
+      const maxBound = MAPS[state.mapKey].bbox[1][2];
+      floorPresetsEl?.querySelectorAll(".ui-btn").forEach((x) => x.classList.remove("active"));
+      applyZClip(state.zMin, v, v < maxBound - 1);
+    });
+
+    sliderZMin?.addEventListener("input", () => {
+      const v = parseFloat(sliderZMin.value);
+      floorPresetsEl?.querySelectorAll(".ui-btn").forEach((x) => x.classList.remove("active"));
+      applyZClip(v, state.zMax, state.cutSlabs);
+    });
+
+    // Bind Render Modes
+    document.querySelectorAll("#render-modes .ui-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("#render-modes .ui-btn").forEach((x) => x.classList.remove("active"));
+        btn.classList.add("active");
+        state.renderMode = parseInt(btn.dataset.rmode, 10);
+      });
+    });
+
+    // Bind Checkboxes
+    document.getElementById("chk-edges")?.addEventListener("change", (e) => { state.showEdges = e.target.checked; });
+    document.getElementById("chk-uvgrid")?.addEventListener("change", (e) => { state.showUVGrid = e.target.checked; });
+    document.getElementById("chk-grid")?.addEventListener("change", (e) => { state.showGrid = e.target.checked; });
+    document.getElementById("chk-labels")?.addEventListener("change", (e) => {
+      state.showLabels = e.target.checked;
+      labelsLayer.style.display = state.showLabels ? "block" : "none";
+    });
+
+    // Fly speed slider
+    const sliderFlySpeed = document.getElementById("slider-flyspeed");
+    const valFlySpeed = document.getElementById("val-flyspeed");
+    sliderFlySpeed?.addEventListener("input", () => {
+      state.flySpeed = parseFloat(sliderFlySpeed.value);
+      if (valFlySpeed) valFlySpeed.textContent = `${state.flySpeed} u/s`;
+    });
+
+    // Mouse / Touch Interaction on Canvas
+    let isDragging = false;
+    let dragButton = 0;
+    let lastX = 0, lastY = 0;
+
+    canvas.addEventListener("contextmenu", (e) => e.preventDefault());
+
+    canvas.addEventListener("mousedown", (e) => {
+      isDragging = true;
+      dragButton = e.button;
+      lastX = e.clientX;
+      lastY = e.clientY;
+    });
+
+    window.addEventListener("mouseup", () => {
+      isDragging = false;
+    });
+
+    window.addEventListener("mousemove", (e) => {
+      if (!isDragging) return;
+      const dx = e.clientX - lastX;
+      const dy = e.clientY - lastY;
+      lastX = e.clientX;
+      lastY = e.clientY;
+
+      const isPan = (dragButton === 2 || dragButton === 1 || e.shiftKey);
+
+      if (state.camMode === "fly" && !isPan) {
+        state.yaw -= dx * 0.0055;
+        state.pitch = Math.max(-1.52, Math.min(1.52, state.pitch + dy * 0.0055));
+        syncOrbitFromEye();
+      } else if (!isPan) {
+        // Orbit rotation
+        state.yaw -= dx * 0.0065;
+        state.pitch = Math.max(-1.52, Math.min(1.55, state.pitch + dy * 0.0065));
+        syncEyeFromOrbit();
+      } else {
+        // Pan in camera plane
+        const panScale = Math.max(state.dist * 0.0012, 0.25);
+        const cy = Math.cos(state.yaw);
+        const sy = Math.sin(state.yaw);
+        const sp = Math.sin(state.pitch);
+        const cp = Math.cos(state.pitch);
+
+        // Right vector in Z-up: [sy, -cy, 0]
+        const rx = sy, ry = -cy;
+        // Up vector in view plane: [sp*cy, sp*sy, cp]
+        const ux = sp * cy, uy = sp * sy, uz = cp;
+
+        state.target[0] += (-dx * rx + dy * ux) * panScale;
+        state.target[1] += (-dx * ry + dy * uy) * panScale;
+        state.target[2] += (dy * uz) * panScale;
+        syncEyeFromOrbit();
+      }
+    });
+
+    canvas.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      const factor = Math.exp(e.deltaY * 0.0011);
+      state.dist = Math.max(15, Math.min(4500, state.dist * factor));
+      syncEyeFromOrbit();
+    }, { passive: false });
+
+    // Keyboard WASD Navigation (works in both Orbit & Fly modes!)
+    window.addEventListener("keydown", (e) => {
+      if (e.target && e.target.tagName === "INPUT") return;
+      state.keys[e.code] = true;
+    });
+    window.addEventListener("keyup", (e) => {
+      state.keys[e.code] = false;
+    });
+
+    function updateKeyboardMovement(dt) {
+      const k = state.keys;
+      let fwd = 0, right = 0, up = 0;
+      if (k["KeyW"] || k["ArrowUp"]) fwd += 1;
+      if (k["KeyS"] || k["ArrowDown"]) fwd -= 1;
+      if (k["KeyD"] || k["ArrowRight"]) right += 1;
+      if (k["KeyA"] || k["ArrowLeft"]) right -= 1;
+      if (k["KeyE"] || k["Space"]) up += 1;
+      if (k["KeyQ"] || k["ControlLeft"]) up -= 1;
+
+      if (fwd === 0 && right === 0 && up === 0) return;
+
+      const speed = state.flySpeed * (k["ShiftLeft"] ? 2.2 : 1.0) * dt;
+      const cp = Math.cos(state.pitch);
+      const sp = Math.sin(state.pitch);
+      const cy = Math.cos(state.yaw);
+      const sy = Math.sin(state.yaw);
+
+      // Forward direction from eye to target: [cp*cy, cp*sy, -sp]
+      const fx = cp * cy, fy = cp * sy, fz = (state.camMode === "fly") ? -sp : 0;
+      // Right direction: [sy, -cy, 0]
+      const rx = sy, ry = -cy;
+
+      const mx = (fx * fwd + rx * right) * speed;
+      const my = (fy * fwd + ry * right) * speed;
+      const mz = (fz * fwd + up) * speed;
+
+      if (state.camMode === "fly") {
+        state.eye[0] += mx;
+        state.eye[1] += my;
+        state.eye[2] += mz;
+        syncOrbitFromEye();
+      } else {
+        state.target[0] += mx;
+        state.target[1] += my;
+        state.target[2] += mz;
+        syncEyeFromOrbit();
+      }
+    }
+
+    // Update 2D projected room labels
+    function updateProjectedLabels(mvp, width, height) {
+      if (!state.showLabels) return;
+      for (let i = 0; i < activeLabelEls.length; i++) {
+        const item = activeLabelEls[i];
+        const p = item.data.pos;
+
+        // Hide label if outside current Z-Clip slice
+        if (p[2] > state.zMax + 15 || p[2] < state.zMin - 5) {
+          item.el.style.display = "none";
+          continue;
+        }
+
+        const x = p[0], y = p[1], z = p[2] + 8;
+        const clipX = mvp[0] * x + mvp[4] * y + mvp[8] * z + mvp[12];
+        const clipY = mvp[1] * x + mvp[5] * y + mvp[9] * z + mvp[13];
+        const clipW = mvp[3] * x + mvp[7] * y + mvp[11] * z + mvp[15];
+
+        if (clipW <= 0.1) {
+          item.el.style.display = "none";
+          continue;
+        }
+
+        const ndcX = clipX / clipW;
+        const ndcY = clipY / clipW;
+        if (ndcX < -1.05 || ndcX > 1.05 || ndcY < -1.05 || ndcY > 1.05) {
+          item.el.style.display = "none";
+          continue;
+        }
+
+        const sx = (ndcX * 0.5 + 0.5) * width;
+        const sy = (1.0 - (ndcY * 0.5 + 0.5)) * height;
+        item.el.style.display = "flex";
+        item.el.style.left = `${sx.toFixed(1)}px`;
+        item.el.style.top = `${sy.toFixed(1)}px`;
+      }
+    }
+
+    // Main Render Loop
+    let lastTime = performance.now();
+    const statCamPos = document.getElementById("stat-campos");
+
+    function render(now) {
+      const dt = Math.min(0.1, (now - lastTime) * 0.001);
+      lastTime = now;
+
+      updateKeyboardMovement(dt);
+
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const cw = canvas.clientWidth;
+      const ch = canvas.clientHeight;
+      const pw = Math.floor(cw * dpr);
+      const ph = Math.floor(ch * dpr);
+
+      if (canvas.width !== pw || canvas.height !== ph) {
+        canvas.width = pw;
+        canvas.height = ph;
+      }
+
+      gl.viewport(0, 0, pw, ph);
+      gl.clearColor(0.043, 0.059, 0.098, 1.0);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+      const proj = mat4Perspective(52 * Math.PI / 180, pw / Math.max(ph, 1), 2.0, 8000.0);
+      const view = mat4LookAtZUp(state.eye, state.target, [0, 0, 1]);
+      const mvp = mat4Mul(proj, view);
+
+      const bufs = getMapBuffers(state.mapKey);
+      const m = MAPS[state.mapKey];
+
+      gl.enable(gl.DEPTH_TEST);
+      gl.depthFunc(gl.LEQUAL);
+
+      // 1. Draw Reference Floor Grid
+      if (state.showGrid) {
+        gl.useProgram(progLine);
+        gl.uniformMatrix4fv(locLine.uMVP, false, mvp);
+        gl.uniform1f(locLine.uDepthBias, 0.0);
+        gl.uniform2f(locLine.uZClip, state.zMin, state.zMax);
+        gl.uniform1f(locLine.uCutSlabs, 0.0);
+        gl.uniform1f(locLine.uAlpha, 0.75);
+        gl.uniform1f(locLine.uIsGrid, 1.0);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, bufs.gridBuf);
+        const stride = 8 * 4;
+        gl.enableVertexAttribArray(locLine.aPos);
+        gl.vertexAttribPointer(locLine.aPos, 3, gl.FLOAT, false, stride, 0);
+        gl.enableVertexAttribArray(locLine.aColor);
+        gl.vertexAttribPointer(locLine.aColor, 3, gl.FLOAT, false, stride, 3 * 4);
+        gl.enableVertexAttribArray(locLine.aBrushZ);
+        gl.vertexAttribPointer(locLine.aBrushZ, 2, gl.FLOAT, false, stride, 6 * 4);
+
+        gl.drawArrays(gl.LINES, 0, bufs.gridVertCount);
+      }
+
+      // 2. Draw Solid Brush Faces
+      gl.useProgram(progSolid);
+      gl.uniformMatrix4fv(locSolid.uMVP, false, mvp);
+      gl.uniform2f(locSolid.uZClip, state.zMin, state.zMax);
+      gl.uniform1f(locSolid.uCutSlabs, state.cutSlabs ? 1.0 : 0.0);
+      gl.uniform1i(locSolid.uRenderMode, state.renderMode);
+      gl.uniform1f(locSolid.uShowUVGrid, state.showUVGrid ? 1.0 : 0.0);
+      gl.uniform2f(locSolid.uMapZBounds, m.bbox[0][2], m.bbox[1][2]);
+
+      if (state.renderMode === 3) {
+        // X-Ray translucent mode
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        gl.depthMask(false);
+      } else {
+        gl.disable(gl.BLEND);
+        gl.depthMask(true);
+      }
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, bufs.solidBuf);
+      const sStride = 11 * 4;
+      gl.enableVertexAttribArray(locSolid.aPos);
+      gl.vertexAttribPointer(locSolid.aPos, 3, gl.FLOAT, false, sStride, 0);
+      gl.enableVertexAttribArray(locSolid.aNormal);
+      gl.vertexAttribPointer(locSolid.aNormal, 3, gl.FLOAT, false, sStride, 3 * 4);
+      gl.enableVertexAttribArray(locSolid.aColor);
+      gl.vertexAttribPointer(locSolid.aColor, 3, gl.FLOAT, false, sStride, 6 * 4);
+      gl.enableVertexAttribArray(locSolid.aBrushZ);
+      gl.vertexAttribPointer(locSolid.aBrushZ, 2, gl.FLOAT, false, sStride, 9 * 4);
+
+      gl.drawArrays(gl.TRIANGLES, 0, bufs.triVertCount);
+      gl.depthMask(true);
+      gl.disable(gl.BLEND);
+
+      // 3. Draw Brush Polygon Edges (TrenchBroom CSG Wireframe)
+      if (state.showEdges || state.renderMode === 2 || state.renderMode === 3) {
+        gl.useProgram(progLine);
+        gl.uniformMatrix4fv(locLine.uMVP, false, mvp);
+        gl.uniform1f(locLine.uDepthBias, 0.00045);
+        gl.uniform2f(locLine.uZClip, state.zMin, state.zMax);
+        gl.uniform1f(locLine.uCutSlabs, state.cutSlabs ? 1.0 : 0.0);
+        gl.uniform1f(locLine.uAlpha, state.renderMode === 2 ? 1.0 : 0.85);
+        gl.uniform1f(locLine.uIsGrid, 0.0);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, bufs.edgeBuf);
+        const eStride = 8 * 4;
+        gl.enableVertexAttribArray(locLine.aPos);
+        gl.vertexAttribPointer(locLine.aPos, 3, gl.FLOAT, false, eStride, 0);
+        gl.enableVertexAttribArray(locLine.aColor);
+        gl.vertexAttribPointer(locLine.aColor, 3, gl.FLOAT, false, eStride, 3 * 4);
+        gl.enableVertexAttribArray(locLine.aBrushZ);
+        gl.vertexAttribPointer(locLine.aBrushZ, 2, gl.FLOAT, false, eStride, 6 * 4);
+
+        gl.drawArrays(gl.LINES, 0, bufs.edgeVertCount);
+      }
+
+      // Update HUD Camera Coordinates & 3D Labels
+      if (statCamPos) {
+        statCamPos.textContent = `${Math.round(state.eye[0])}, ${Math.round(state.eye[1])}, ${Math.round(state.eye[2])}`;
+      }
+      updateProjectedLabels(mvp, cw, ch);
+
+      requestAnimationFrame(render);
+    }
+
+    // Initialize default map (ufrrj) and start loop
+    loadMap("ufrrj");
+    requestAnimationFrame(render);
+  })();
+  </script>
+</body>
+</html>

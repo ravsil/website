@@ -4,6 +4,7 @@ const ICONS = {
     'this-pc': `<svg viewBox="0 0 48 48"><rect x="6" y="8" width="36" height="24" rx="2.5" fill="#3a7bd5"/><rect x="9" y="11" width="30" height="18" rx="1.5" fill="#1a1a2e"/><path d="M18 35h12M24 32v3" stroke="#5ba0e0" stroke-width="2" stroke-linecap="round"/><rect x="16" y="37" width="16" height="2" rx="1" fill="#5ba0e0"/></svg>`,
     'projects': `<svg viewBox="0 0 48 48"><path d="M6 16a2 2 0 012-2h12l3 3h17a2 2 0 012 2v17a2 2 0 01-2 2H8a2 2 0 01-2-2V16z" fill="#e8a838"/><path d="M6 21h36v15a2 2 0 01-2 2H8a2 2 0 01-2-2V21z" fill="#ffc107"/></svg>`,
     'games': `<svg viewBox="0 0 48 48"><path d="M6 16a2 2 0 012-2h12l3 3h17a2 2 0 012 2v17a2 2 0 01-2 2H8a2 2 0 01-2-2V16z" fill="#e8a838"/><path d="M6 21h36v15a2 2 0 01-2 2H8a2 2 0 01-2-2V21z" fill="#ffc107"/><path d="M19 26h10a3 3 0 012.9 3.8l-.8 3a1.8 1.8 0 01-3 .8l-1.6-1.6h-5l-1.6 1.6a1.8 1.8 0 01-3-.8l-.8-3A3 3 0 0119 26z" fill="#7c4dff"/><path d="M21 28.5v2.5M19.75 29.75h2.5" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/><circle cx="27.5" cy="29" r="0.8" fill="#fff"/><circle cx="26" cy="30.5" r="0.8" fill="#fff"/></svg>`,
+    'browser': `<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18" fill="#0078d4"/><ellipse cx="24" cy="24" rx="8" ry="18" fill="none" stroke="#60cdff" stroke-width="2"/><path d="M7 18h34M7 30h34" stroke="#60cdff" stroke-width="2"/><circle cx="24" cy="24" r="18" fill="none" stroke="#80d8ff" stroke-width="2"/></svg>`,
     'maximize': `<svg viewBox="0 0 10 10"><rect x="1" y="1" width="8" height="8" rx="0.5" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>`,
     'restore': `<svg viewBox="0 0 10 10"><rect x="2.5" y="0.5" width="7" height="7" rx="0.5" fill="none" stroke="currentColor" stroke-width="1"/><rect x="0.5" y="2.5" width="7" height="7" rx="0.5" fill="var(--win-window-header)" stroke="currentColor" stroke-width="1"/></svg>`,
     'close': `<svg viewBox="0 0 10 10"><path d="M1 1l8 8M9 1l-8 8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>`,
@@ -13,12 +14,70 @@ const ICONS = {
     'markdown-viewer': `<svg viewBox="0 0 40 40"><path d="M12 4h12l8 8v20a2 2 0 01-2 2H12a2 2 0 01-2-2V6a2 2 0 012-2z" fill="#5ba0e0"/><path d="M24 4v6a2 2 0 002 2h6" fill="#4a90d9"/><path d="M16 18l3 3-3 3M24 18l-3 3 3 3" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
     'pdf-file': `<svg viewBox="0 0 40 40"><path d="M10 4h14l8 8v22a2 2 0 01-2 2H10a2 2 0 01-2-2V6a2 2 0 012-2z" fill="#e53935"/><path d="M24 4v6a2 2 0 002 2h6" fill="#b71c1c"/><rect x="11" y="19" width="18" height="9" rx="1.5" fill="rgba(0,0,0,0.22)"/><text x="20" y="25.5" text-anchor="middle" fill="#fff" font-size="6.5" font-weight="700" font-family="Inter, sans-serif">PDF</text></svg>`,
     'pdf-viewer': `<svg viewBox="0 0 40 40"><path d="M10 4h14l8 8v22a2 2 0 01-2 2H10a2 2 0 01-2-2V6a2 2 0 012-2z" fill="#e53935"/><path d="M24 4v6a2 2 0 002 2h6" fill="#b71c1c"/><rect x="11" y="19" width="18" height="9" rx="1.5" fill="rgba(0,0,0,0.22)"/><text x="20" y="25.5" text-anchor="middle" fill="#fff" font-size="6.5" font-weight="700" font-family="Inter, sans-serif">PDF</text></svg>`,
+    'terminal': `<svg viewBox="0 0 48 48"><rect x="4" y="8" width="40" height="32" rx="4" fill="#18181b" stroke="#3f3f46" stroke-width="2"/><path d="M4 14a4 4 0 014-4h32a4 4 0 014 4v2H4v-2z" fill="#27272a"/><circle cx="10" cy="12" r="1.5" fill="#ef4444"/><circle cx="15" cy="12" r="1.5" fill="#eab308"/><circle cx="20" cy="12" r="1.5" fill="#22c55e"/><path d="M12 22l6 5-6 5M21 32h9" stroke="#4ade80" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+    'maphra': `<img src="demos/compiladores/peixinho.svg" style="width:28px;height:28px;object-fit:contain;" alt="Maphra"/>`,
+};
+
+// ------ executable projects registry ------
+const EXECUTABLE_PROJECTS = {
+    'datarural.md': {
+        id: 'datarural',
+        title: 'DataRural — Plataforma de Datasets da UFRRJ',
+        url: 'demos/datarural/index.html',
+        mode: 'Mock API'
+    },
+    'agendamento-lab.md': {
+        id: 'agendamento-lab',
+        title: 'Agendamento de Computadores — Lab 310 (SmartIM)',
+        url: 'demos/agendamento-lab/index.html',
+        mode: 'Mock API'
+    },
+    'compiladores.md': {
+        id: 'compiladores',
+        title: 'Compilador Maphra — Playground',
+        url: 'demos/compiladores/index.html',
+        mode: 'Playground',
+        openIn: 'maphra'
+    },
+    'e-commerce.md': {
+        id: 'e-commerce',
+        title: 'BDV E-commerce',
+        url: 'demos/e-commerce/index.html',
+        mode: 'Mock API + Stripe'
+    },
+    'IM-3D.md': {
+        id: 'IM-3D',
+        title: 'IM-3D — Visualizador 3D do Campus UFRRJ (Nova Iguaçu)',
+        url: 'demos/IM-3D/index.html',
+        mode: 'WebGL 3D Viewer'
+    },
+    'jogoPE.md': {
+        id: 'jogoPE',
+        title: 'A Lenda de Anura — RPG de Terminal',
+        url: 'demos/jogoPE/index.html',
+        mode: 'Terminal (ncurses)',
+        openIn: 'terminal'
+    },
+    'email-classifier.md': {
+        id: 'email-classifier',
+        title: 'E-mail Classifier',
+        url: 'https://emailclassifier.ravsil.dev',
+        mode: 'GitHub Pages'
+    },
+    'show-do-milhao.md': {
+        id: 'show-do-milhao',
+        title: 'Show do Milhão — Quiz Web Game',
+        url: 'demos/show-do-milhao/index.html',
+        mode: 'Web Game'
+    }
 };
 
 // ------ start menu programs ------
 const START_PROGRAMS = [
     { id: 'projects', name: 'Projetos' },
-    { id: 'games', name: 'Jogos' },
+    { id: 'browser', name: 'Navegador Web' },
+    { id: 'maphra', name: 'Compilador Maphra' },
+    { id: 'terminal', name: 'jogoPE (A Lenda de Anura)', file: 'jogoPE.md' },
     { id: 'pdf-viewer', name: 'Currículo (PDF)', file: 'curriculo.pdf' },
     { id: 'markdown-viewer', name: 'Leitor de Markdown' },
     { id: 'this-pc', name: 'Este PC' },
@@ -29,12 +88,13 @@ const START_PROGRAMS = [
 const MOBILE_APPS = [
     { id: 'this-pc', name: 'Este PC', color: '#3a7bd5', icon: ICONS['this-pc'] },
     { id: 'projects', name: 'Projetos', color: '#e8a838', icon: ICONS['projects'] },
-    { id: 'games', name: 'Jogos', color: '#7c4dff', icon: ICONS['games'] },
+    { id: 'browser', name: 'Navegador', color: '#0078d4', icon: ICONS['browser'] },
+    { id: 'maphra', name: 'Maphra', color: '#7c3aed', icon: ICONS['maphra'] },
     { id: 'pdf-viewer', name: 'Currículo', color: '#e53935', icon: ICONS['pdf-file'], file: 'curriculo.pdf' },
     { id: 'markdown-viewer', name: 'Markdown', color: '#5ba0e0', icon: ICONS['file'] }
 ];
 
-const DOCK_APPS = ['this-pc', 'projects', 'games', 'pdf-viewer'];
+const DOCK_APPS = ['this-pc', 'projects', 'browser', 'pdf-viewer'];
 
 // ------ project folders data ------
 const PROJECTS_DATA = {
@@ -53,8 +113,10 @@ const PROJECTS_DATA = {
             { type: 'md', file: 'compiladores.md', label: 'compiladores.md' },
             { type: 'md', file: 'e-commerce.md', label: 'e-commerce.md' },
             { type: 'md', file: 'sistemasDeRecomendacao.md', label: 'sistemasDeRecomendacao.md' },
+            { type: 'md', file: 'sistemasOperacionais.md', label: 'sistemasOperacionais.md' },
             { type: 'md', file: 'estruturaDeDadosII.md', label: 'estruturaDeDadosII.md' },
             { type: 'md', file: 'inteligenciaArtificial.md', label: 'inteligenciaArtificial.md' },
+            { type: 'md', file: 'IM-3D.md', label: 'IM-3D.md' },
             { type: 'md', file: 'jogoCG.md', label: 'jogoCG.md' },
             { type: 'md', file: 'jogoPE.md', label: 'jogoPE.md' }
         ]
@@ -63,17 +125,13 @@ const PROJECTS_DATA = {
         breadcrumb: 'Projetos › Pessoais',
         items: [
             { type: 'md', file: 'email-classifier.md', label: 'email-classifier.md' },
-            { type: 'md', file: 'chess-bot.md', label: 'chess-bot.md' }
+            { type: 'md', file: 'chess-bot.md', label: 'chess-bot.md' },
+            { type: 'md', file: 'cloneHero.md', label: 'cloneHero.md' },
+            { type: 'md', file: 'show-do-milhao.md', label: 'show-do-milhao.md' },
+            { type: 'md', file: 'IM-3D.md', label: 'IM-3D.md' }
         ]
     }
 };
-
-const GAMES_ITEMS = [
-    { type: 'md', file: 'cloneHero.md', label: 'cloneHero.md' },
-    { type: 'md', file: 'chess-bot.md', label: 'chess-bot.md' },
-    { type: 'md', file: 'jogoCG.md', label: 'jogoCG.md' },
-    { type: 'md', file: 'jogoPE.md', label: 'jogoPE.md' }
-];
 
 function renderFileGridItems(items) {
     return items.map(item => {
@@ -243,32 +301,66 @@ const APP_CONFIGS = {
                 ${renderFileGridItems(PROJECTS_DATA.root.items)}
             </div>`
     },
-    'games': {
-        title: 'Jogos',
-        width: 41.25, height: 26,
-        content: () => `
-            <div class="explorer-toolbar">
-                <div class="explorer-nav">
-                    <button disabled><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2L4 6l4 4"/></svg></button>
-                    <button disabled><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2l4 4-4 4"/></svg></button>
-                </div>
-                <div class="explorer-breadcrumb">
-                    ${ICONS['games'].replace(/width="[^"]*"/g, '').replace(/height="[^"]*"/g, '')}
-                    Jogos
-                </div>
-            </div>
-            <div class="file-grid">
-                ${renderFileGridItems(GAMES_ITEMS)}
-            </div>`
-    },
     'markdown-viewer': {
         title: 'Visualizador de Markdown',
         width: 48, height: 32,
         content: () => `
             <div class="md-viewer-layout">
+                <div class="md-exec-bar hidden" id="md-exec-bar">
+                    <div class="md-exec-info">
+                        <span class="md-exec-dot"></span>
+                        <span class="md-exec-label" id="md-exec-label">Projeto executável</span>
+                        <span class="md-exec-badge" id="md-exec-badge">WebAssembly</span>
+                    </div>
+                    <button class="md-exec-btn" id="md-exec-btn" title="Executar projeto no navegador interno">
+                        <svg viewBox="0 0 16 16" fill="currentColor">
+                            <polygon points="4,2.5 13.5,8 4,13.5"/>
+                        </svg>
+                        <span>Executar Projeto</span>
+                    </button>
+                </div>
                 <div class="md-content-pane">
                     <div class="markdown-body" id="md-rendered-pane"></div>
                 </div>
+            </div>`
+    },
+    'browser': {
+        title: 'Navegador Web',
+        width: 62, height: 39,
+        content: () => {
+            const bookmarkButtons = Object.entries(EXECUTABLE_PROJECTS)
+                .filter(([, p]) => p.openIn !== 'terminal' && p.openIn !== 'maphra')
+                .map(([mdKey, p]) => `
+                <button class="browser-bookmark-item" data-md="${mdKey}" title="${p.title}">
+                    <span class="bb-dot"></span>
+                    <span>${p.id}</span>
+                </button>
+            `).join('');
+            return `
+            <div class="browser-layout">
+                <div class="browser-bookmarks-bar" id="browser-bookmarks-bar">
+                    ${bookmarkButtons}
+                </div>
+                <div class="browser-viewport">
+                    <iframe class="browser-iframe" id="browser-iframe" src="demos/browser-home/index.html" title="Project Browser"></iframe>
+                </div>
+            </div>`;
+        }
+    },
+    'maphra': {
+        title: 'Compilador Maphra — Playground',
+        width: 60, height: 38,
+        content: () => `
+            <div class="maphra-app-layout" style="width:100%;height:100%;background:#0f1117;">
+                <iframe class="maphra-app-iframe" id="maphra-iframe" src="demos/compiladores/index.html" style="width:100%;height:100%;border:none;display:block;" title="Compilador Maphra"></iframe>
+            </div>`
+    },
+    'terminal': {
+        title: 'Terminal — ./game (A Lenda de Anura)',
+        width: 52, height: 33,
+        content: () => `
+            <div class="terminal-app-layout">
+                <iframe class="terminal-app-iframe" id="terminal-iframe" src="demos/jogoPE/index.html" title="Terminal Application"></iframe>
             </div>`
     },
     'pdf-viewer': {
@@ -280,7 +372,6 @@ const APP_CONFIGS = {
                     <div class="pdf-toolbar-info">
                         ${ICONS['pdf-file']}
                         <span class="pdf-filename">curriculo.pdf</span>
-                        <span class="pdf-badge">Desatualizado</span>
                     </div>
                     <div class="pdf-toolbar-actions">
                         <a href="curriculo.pdf" target="_blank" rel="noopener noreferrer" class="pdf-action-btn" title="Abrir em nova aba">

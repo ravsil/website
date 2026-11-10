@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Agendamento — UFRRJ</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+
+    <!-- Font Awesome -->
+    <script defer src="https://use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+    <link rel="icon" href="img/logo.png">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-5">
+        <div id="buttonDiv"></div>
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <img src="img/logo.png" width="50" height="50">
+            </a>
+            <div id="hello" class="text-white ml-2"></div>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav ml-auto mr-4">
+                    <li class="nav-item active">
+                        <a class="nav-link" href="agendamento.html">Agendamento</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="disponibilidade.html">Disponibilidade</a>
+                    </li>
+                    <li class="nav-item active" id="admin-page">
+                        <a class="nav-link" href="admin.html">Admin</a>
+                    </li>
+                    <li class="nav-item active" id="login-link">
+                        <a class="nav-link" href="index.html">Login</a>
+                    </li>
+                    <li class="nav-item active" id="logout-link">
+                        <a class="nav-link" onclick="logout()" href="index.html">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" id="container">
+        <div class="row">
+            <div class="col-md-12 text-center text-lg-center mb-3">
+                <p class="display-4" id="txt-Principal">Login Institucional</p>
+                <p class="text-muted">Autenticação institucional OAuth 2.0 (@ufrrj.br) — Clique em uma conta abaixo para testar</p>
+            </div>
+        </div>
+        <div class="row justify-content-center align-items-center">
+            <div class="col-md-7 col-11 mt-3 bg-dark p-4" style="border-radius: 30px;">
+                <div id="login-button" class="d-flex flex-column align-items-center justify-content-center">
+                    <button type="button" onclick="demoLoginAs('rafael@ufrrj.br', 'Rafael', 'Professor', 'agendamento.html')"
+                        class="btn btn-light col-md-9 col-11 py-2 mb-2 d-flex align-items-center justify-content-center shadow-sm"
+                        style="border-radius: 999px; font-weight: 600; margin: 0.4rem auto;">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" height="20" class="mr-2" alt="Google">
+                        Entrar com Google — rafael@ufrrj.br (Professor / Admin)
+                    </button>
+                    <button type="button" onclick="demoLoginAs('aluno@ufrrj.br', 'Aluno', 'Aluno', 'agendamento.html')"
+                        class="btn btn-outline-light col-md-9 col-11 py-2 mb-2 d-flex align-items-center justify-content-center"
+                        style="border-radius: 999px; font-weight: 600; margin: 0.4rem auto;">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" height="20" class="mr-2" alt="Google">
+                        Entrar com Google — aluno@ufrrj.br (Aluno)
+                    </button>
+                </div>
+                <div class="row justify-content-center align-items-center mt-3">
+                    <a href="disponibilidade.html" class="btn col-md-6 col-10 mx-auto bg-light text-dark font-weight-bold"
+                        style="font-family: 'Open Sans', sans-serif; border-radius: 999px;" id="1">Verificar Lotação</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white mt-5 p-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 text-center">
+                    <h5>GitHub</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="https://github.com/ravsil/Agendamento-Lab" class="text-white"><i
+                                    class="fab fa-github fa-2x"></i></a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5>Feito por:</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="https://github.com/ravsil" class="text-white">Rafael Silva</a></li>
+                        <li><a href="https://github.com/Rafael-Franca01" class="text-white">Rafael França</a></li>
+                        <li><a href="https://github.com/Dropez7" class="text-white">Pedro Albuquerque</a></li>
+                        <li><a href="https://github.com/helcioDuarte" class="text-white">Helcio Duarte</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 text-center">
+                    <h5>UFRRJ</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="https://portal.ufrrj.br/">
+                                <img src="https://institucional.ufrrj.br/ccs/files/2019/06/rural_logo03.png"
+                                    alt="UFRRJ Logo" width="50" style="filter: brightness(0) invert(1);">
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Jquery.js -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script src="mock-api.js"></script>
+    <!-- Popper.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <!-- Bootstrap JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script src="utils/preload.js"></script>
+</body>
+
+</html>

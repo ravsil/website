@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Agendamento — Computadores</title>
+    <style>
+        body {
+            display: none !important;
+        }
+    </style>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+
+    <!-- Font Awesome -->
+    <script defer src="https://use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
+    <link rel="icon" href="img/logo.png">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/colors.css">
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-5">
+        <div id="buttonDiv"></div>
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <img src="img/logo.png" width="50" height="50">
+            </a>
+
+            <div id="hello" class="white-text"></div>
+
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav ml-auto mr-4">
+                    <li class="nav-item active">
+                        <a class="nav-link" href="disponibilidade.html">Disponibilidade</a>
+                    </li>
+                    <li class="nav-item active" id="admin-page">
+                        <a class="nav-link" href="admin.html">Admin</a>
+                    </li>
+                    <li class="nav-item active" id="login-link">
+                        <a class="nav-link" href="index.html">Login</a>
+                    </li>
+                    <li class="nav-item active" id="logout-link">
+                        <a class="nav-link" onclick="logout()" href="index.html">Logout</a>
+                    </li>
+                </ul>
+
+            </div>
+        </div>
+    </nav>
+
+    <div id="popup">
+        <div class="popup_content">
+            <div class="row" id="title" style="text-align: center; font-size: 1.2rem; margin-bottom: 0.5rem;"></div>
+            <div class="container mt-5" style="margin-top: -0.01rem !important">
+                <div class="row">
+                    <div class="col-md-12">
+                        <form>
+                            <div class="form-group">
+                                <label for="hora1">Horário de início:</label>
+                                <select class="form-control" id="hora1" onchange="updateHoraFinal()">
+                                    <option value="" selected></option>
+                                </select>
+                            </div>
+                        </form>
+                        <form>
+                            <div class="form-group">
+                                <label for="hora2">Horário final:</label>
+                                <select class="form-control" id="hora2" disabled="true">
+                                </select>
+                            </div>
+                        </form>
+                        <button class="btn btn-primary" onclick="submit()"
+                            style="margin-top: -0.01rem !important">Salvar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="container0">
+        <div class="row">
+            <div class="col-md-12 text-center text-lg-center mb-5">
+                <p class="display-4" id="txt-Principal">Agendamento de Computadores</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white mt-5 p-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 text-center">
+                    <h5>GitHub</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="https://github.com/ravsil/Agendamento-Lab" class="text-white"><i
+                                    class="fab fa-github fa-2x"></i></a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5>Feito por:</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="https://github.com/ravsil" class="text-white">Rafael Silva</a></li>
+                        <li><a href="https://github.com/Rafael-Franca01" class="text-white">Rafael França</a></li>
+                        <li><a href="https://github.com/Dropez7" class="text-white">Pedro Albuquerque</a></li>
+                        <li><a href="https://github.com/helcioDuarte" class="text-white">Helcio Duarte</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 text-center">
+                    <h5>UFRRJ</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="https://portal.ufrrj.br/">
+                                <img src="https://institucional.ufrrj.br/ccs/files/2019/06/rural_logo03.png"
+                                    alt="UFRRJ Logo" width="50" style="filter: brightness(0) invert(1);">
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Jquery.js -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script src="mock-api.js"></script>
+    <!-- Popper.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <!-- Bootstrap JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script src="utils/utils.js"></script>
+    <script src="agend/pcSetup.js"></script>
+    <script src="agend/agend.js"></script>
+    <script src="utils/preload.js"></script>
+</body>
+
+</html>

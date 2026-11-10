@@ -486,6 +486,14 @@ function openMobileApp(appId, targetFile, pushCurrentToStack = false, initialFol
         initMarkdownViewerListeners(screen, targetFile || 'README.md');
     }
 
+    if (appId === 'browser') {
+        initBrowserListeners(screen, targetFile || 'datarural.md');
+    }
+
+    if (appId === 'terminal') {
+        initTerminalListeners(screen, targetFile || 'jogoPE.md');
+    }
+
     screen.classList.add('open');
     document.getElementById('mobile-mode')?.classList.add('app-open');
 

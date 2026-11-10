@@ -1,7 +1,8 @@
 # A Lenda de Anura
 
 > **Categoria:** Graduação & Jogos — Disciplina TN706 - Programação Estruturada (UFRRJ)  
-> **Repositório:** [github.com/ravsil/jogoPE](https://github.com/ravsil/jogoPE)
+> **Repositório:** [github.com/ravsil/jogoPE](https://github.com/ravsil/jogoPE)  
+> **Executar:** [▶ Jogar A Lenda de Anura no Navegador](#run:jogoPE.md)
 
 **A Lenda de Anura** é um jogo RPG desenvolvido inteiramente em **C** que roda diretamente no **terminal Linux**, utilizando a biblioteca `ncurses` para renderização gráfica baseada em caracteres (pixel art em terminal), diálogos com retratos de personagens, exploração de mapas, combate em turnos e sistema de salvamento.
 

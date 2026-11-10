@@ -2,7 +2,8 @@
 
 > **Categoria:** Projeto Pessoal  
 > **Repositório:** [github.com/ravsil/email-classifier](https://github.com/ravsil/email-classifier)  
-> ** Aplicação Online:** [emailclassifier.ravsil.dev](https://emailclassifier.ravsil.dev)
+> **Aplicação Online:** [emailclassifier.ravsil.dev](https://emailclassifier.ravsil.dev)  
+> **Executar:** [▶ Abrir E-mail Classifier no Navegador](#run:email-classifier.md)
 
 **E-mail Classifier** é uma aplicação web desenvolvida com o intuito de classificar e-mails automaticamente utilizando técnicas de aprendizado de máquina / processamento de texto para melhorar a organização e a eficiência no gerenciamento de mensagens. Os e-mails são classificados em duas categorias principais: **Produtivo** e **Improdutivo**.
 

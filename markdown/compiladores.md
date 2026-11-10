@@ -1,7 +1,8 @@
 # Compilador da Linguagem Maphra
 
 > **Categoria:** Graduação — Disciplina de Compiladores (UFRRJ)  
-> **Repositório:** [github.com/Dropez7/compiladores](https://github.com/Dropez7/compiladores)
+> **Repositório:** [github.com/Dropez7/compiladores](https://github.com/Dropez7/compiladores)  
+> **Executar:** [▶ Abrir Playground do Compilador Maphra](#run:compiladores.md)
 
 **Maphra** é uma linguagem de programação criada na disciplina de Compiladores do curso de Ciência da Computação da UFRRJ. O compilador realiza análise léxica, sintática e semântica, traduzindo programas escritos em Maphra (`.mpr`) para **código intermediário de 3 endereços em C**, que é em seguida compilado com `gcc`.
 

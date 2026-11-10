@@ -1,7 +1,8 @@
 # Agendamento de Computadores no Laboratório 310
 
 > **Categoria:** Graduação — Projeto de Extensão SmartIM (UFRRJ)  
-> **Repositório:** [github.com/ravsil/agendamento-lab](https://github.com/ravsil/agendamento-lab)
+> **Repositório:** [github.com/ravsil/agendamento-lab](https://github.com/ravsil/agendamento-lab)  
+> **Executar:** [▶ Abrir Sistema de Agendamento no Navegador](#run:agendamento-lab.md)
 
 O objetivo deste projeto é desenvolver um sistema de agendamento para os computadores localizados na sala 310 do bloco de informática da UFRRJ - Campus Nova Iguaçu (IM/UFRRJ).
 

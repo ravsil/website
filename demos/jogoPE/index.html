@@ -1,0 +1,1942 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>A Lenda de Anura — Terminal RPG (WASM Edition)</title>
+  <script src="gamedata.js"></script>
+  <style>
+    :root {
+      --bg-dark: #0c0c0c;
+      --panel-bg: #111111;
+      --panel-border: #262626;
+      --accent: #87CF79;
+      --accent-bright: #C5E09D;
+      --gold: #FEFF81;
+      --danger: #EA4F4F;
+      --text-main: #cccccc;
+      --text-muted: #767676;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100vh;
+      background: #0c0c0c;
+      color: var(--text-main);
+      font-family: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      overflow: hidden;
+      outline: none;
+    }
+
+    /* Terminal Prompt Line */
+    .terminal-cmdline {
+      width: 100%;
+      padding: 6px 14px;
+      background: #0c0c0c;
+      border-bottom: 1px solid #1f1f1f;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    .cmd-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cmd-user { color: #4ec9b0; font-weight: 700; }
+    .cmd-path { color: #569cd6; font-weight: 700; }
+    .cmd-exec { color: #dcdcaa; }
+
+    .cmd-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .top-btn {
+      background: #181818;
+      color: #b0b0b0;
+      border: 1px solid #2e2e2e;
+      border-radius: 3px;
+      padding: 2px 8px;
+      font-family: inherit;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.12s ease;
+    }
+
+    .top-btn:hover {
+      background: #252525;
+      color: #fff;
+      border-color: #4ec9b0;
+    }
+
+    /* Main Terminal Viewport Container */
+    .terminal-stage {
+      width: 100%;
+      flex: 1;
+      min-height: 0;
+      padding: 8px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .screen-wrapper {
+      position: relative;
+      /* 14x7 tiles of 16x16 pixels -> true 2:1 display aspect ratio */
+      aspect-ratio: 2 / 1;
+      width: min(100%, calc((100vh - 148px) * 2));
+      max-height: calc(100vh - 148px);
+      background: #C5E09D;
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid #2e3829;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.85);
+    }
+
+    canvas#anuraCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      image-rendering: -moz-crisp-edges;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+      image-rendering: pixelated;
+    }
+
+    .scanlines {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(
+        to bottom,
+        rgba(255,255,255,0),
+        rgba(255,255,255,0) 50%,
+        rgba(0, 0, 0, 0.12) 50%,
+        rgba(0, 0, 0, 0.12)
+      );
+      background-size: 100% 4px;
+      opacity: 0.45;
+    }
+
+    .scanlines.hidden {
+      display: none;
+    }
+
+    /* Interactive Controls Deck */
+    .controls-deck {
+      width: 100%;
+      padding: 6px 16px 10px;
+      background: #111111;
+      border-top: 1px solid #222222;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .dpad-group {
+      display: grid;
+      grid-template-columns: repeat(3, 46px);
+      grid-template-rows: repeat(2, 36px);
+      gap: 4px;
+    }
+
+    .action-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .ctrl-btn {
+      background: #1c1c1c;
+      border: 1px solid #383838;
+      border-bottom: 2px solid #282828;
+      color: #e0e0e0;
+      border-radius: 5px;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.05s ease, background 0.08s ease;
+      touch-action: manipulation;
+    }
+
+    .ctrl-btn:active, .ctrl-btn.pressed {
+      transform: translateY(1px);
+      background: #2b8a5f;
+      border-color: #87CF79;
+      color: #fff;
+    }
+
+    .ctrl-btn .sub {
+      font-size: 8.5px;
+      font-weight: 400;
+      color: #9e9e9e;
+      margin-top: 1px;
+    }
+
+    .action-btn {
+      min-width: 74px;
+      height: 44px;
+      padding: 0 10px;
+    }
+
+    .action-btn.primary {
+      background: #1b3b2b;
+      border-color: #3b7d5c;
+    }
+
+    .action-btn.danger {
+      background: #3a1821;
+      border-color: #7c2438;
+    }
+
+    .action-btn.danger.ready {
+      animation: pulse-boss 1.4s infinite;
+    }
+
+    @keyframes pulse-boss {
+      0%, 100% { box-shadow: 0 0 0 rgba(234, 79, 79, 0); }
+      50% { box-shadow: 0 0 12px rgba(234, 79, 79, 0.75); }
+    }
+
+    .help-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.45;
+      max-width: 390px;
+    }
+
+    .help-hint kbd {
+      background: #1e1e1e;
+      border: 1px solid #383838;
+      border-radius: 3px;
+      padding: 1px 5px;
+      color: #dcdcaa;
+      font-size: 10px;
+    }
+
+    .sr-only-hud {
+      display: none;
+    }
+
+    @media (max-width: 720px) {
+      .controls-deck {
+        justify-content: center;
+      }
+      .help-hint {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body tabindex="0">
+
+  <!-- Terminal Prompt Bar -->
+  <div class="terminal-cmdline">
+    <div class="cmd-left">
+      <span class="cmd-user">rafael@ufrrj</span>:<span class="cmd-path">~/jogoPE</span>$ <span class="cmd-exec">./game</span>
+      <span style="color:#666; margin-left:6px;" id="stateLabel">[TÍTULO]</span>
+    </div>
+    <div class="cmd-actions">
+      <button class="top-btn" id="btnScanlines" title="Alternar efeito CRT">CRT: ON</button>
+      <button class="top-btn" id="btnAudio" title="Alternar som 8-bit">Som: ON</button>
+      <button class="top-btn" id="btnFastText" title="Velocidade do texto">Texto: Normal</button>
+      <button class="top-btn" id="btnReset" title="Reiniciar processo ./game">Reiniciar</button>
+    </div>
+  </div>
+
+  <!-- ncurses Viewport -->
+  <main class="terminal-stage" id="terminalStage">
+    <div class="screen-wrapper">
+      <canvas id="anuraCanvas" width="672" height="112"></canvas>
+      <div class="scanlines" id="scanlinesOverlay"></div>
+    </div>
+    <div class="sr-only-hud">
+      <span id="hudName"></span>
+      <span id="hudLife"></span>
+      <span id="hudMana"></span>
+      <span id="hudStats"></span>
+      <span id="hudXp"></span>
+      <span id="hudFlies"></span>
+      <span id="hudArea"></span>
+    </div>
+  </main>
+
+  <!-- On-Screen Controls -->
+  <footer class="controls-deck">
+    <div class="dpad-group">
+      <div></div>
+      <button class="ctrl-btn" type="button" data-key="w">W<span class="sub">▲</span></button>
+      <div></div>
+      <button class="ctrl-btn" type="button" data-key="a">A<span class="sub">◀</span></button>
+      <button class="ctrl-btn" type="button" data-key="s">S<span class="sub">▼</span></button>
+      <button class="ctrl-btn" type="button" data-key="d">D<span class="sub">▶</span></button>
+    </div>
+
+    <div class="help-hint" id="contextHint">
+      Teclado ativo: <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> mover &bull; <kbd>J</kbd> confirmar &bull; <kbd>H</kbd> cancelar &bull; <kbd>K</kbd> menu &bull; <kbd>F</kbd> enfrentar humano
+    </div>
+
+    <div class="action-group">
+      <button class="ctrl-btn action-btn primary" type="button" data-key="j">J<span class="sub">Confirmar</span></button>
+      <button class="ctrl-btn action-btn" type="button" data-key="h">H<span class="sub">Cancelar</span></button>
+      <button class="ctrl-btn action-btn" type="button" data-key="k">K<span class="sub">Menu</span></button>
+      <button class="ctrl-btn action-btn danger" type="button" id="btnBossF" data-key="f">F<span class="sub">Humano</span></button>
+    </div>
+  </footer>
+
+  <script>
+    // =========================================================================
+    // 1. EXACT 16-COLOR PALETTE FROM README.md & BITMAP ASSETS
+    // =========================================================================
+    const PALETTE = [
+      "#C5E09D", // 0: Background / Transparent
+      "#FFFFFF", // 1
+      "#000000", // 2: Text & outlines
+      "#875198", // 3
+      "#FEFF81", // 4
+      "#2B8A5F", // 5
+      "#4ABA63", // 6
+      "#87CF79", // 7
+      "#226AA1", // 8
+      "#419AC3", // 9
+      "#C083FE", // 10
+      "#EA4F4F", // 11
+      "#64754F", // 12
+      "#C2BA6E", // 13: Dialog & menu boxes (COLOR_PAIR 21)
+      "#BE294E", // 14
+      "#EFDBA7"  // 15
+    ];
+
+    // Unpack BigInt sprites & characters from INITIAL_GAME_DATA (gamedata.js)
+    const ASSETS = INITIAL_GAME_DATA.assets.map(lines => ({
+      lines: lines.map(v => BigInt(v))
+    }));
+    const CHARACTERS = INITIAL_GAME_DATA.characters.map(v => BigInt(v));
+
+    function cloneScreens() {
+      return INITIAL_GAME_DATA.screens.map(scr => ({
+        world: scr.map(row => row.slice())
+      }));
+    }
+
+    function createFreshPlayer() {
+      const p = INITIAL_GAME_DATA.player;
+      return {
+        sprites: p.sprites.map(lines => ({ lines: lines.map(v => BigInt(v)) })),
+        name: "",
+        life: p.life,
+        maxLife: p.maxLife,
+        attack: p.attack,
+        defense: p.defense,
+        mana: p.mana,
+        magic: p.magic,
+        potions: p.potions,
+        xp: p.xp,
+        lvl: p.lvl,
+        mapX: p.mapX,
+        mapY: p.mapY,
+        x: p.x,
+        y: p.y,
+        curScreen: p.curScreen
+      };
+    }
+
+    // =========================================================================
+    // 2. GENUINE WEBASSEMBLY (.wasm) MODULE FOR COMBAT & RNG
+    // =========================================================================
+    // Exports:
+    // - diceRoll(randVal: i32, chance: i32) -> i32  ((randVal % 100) <= chance)
+    // - calcMeleeDmg(crit: i32, atk: i32, def: i32) -> i32
+    // - calcMagicDmg(crit: i32, mag: i32, def: i32) -> i32
+    // - calcEnemyDmg(crit: i32, eAtk: i32, pDef: i32) -> i32
+    const WASM_BASE64 = "AGFzbQEAAAABDgJgAn9/AX9gA39/fwF/AwUEAAEBAQc5BAhkaWNlUm9sbAAADGNhbGNNZWxlZURtZwABDGNhbGNNYWdpY0RtZwACDGNhbGNFbmVteURtZwADCj8ECgAgAEFkbyABTAsPAEEEQQIgABsgAWwgAm0LEgBBBEECIAAbIAFsIAJtQQNsCw8AIAEgAm1BAkEBIAAbbAs=";
+    let wasmExports = null;
+
+    async function initWasm() {
+      try {
+        const binStr = atob(WASM_BASE64);
+        const bytes = new Uint8Array(binStr.length);
+        for (let i = 0; i < binStr.length; i++) bytes[i] = binStr.charCodeAt(i);
+        const { instance } = await WebAssembly.instantiate(bytes);
+        wasmExports = instance.exports;
+      } catch (e) {
+        console.warn("Fallback JS math active:", e);
+      }
+    }
+
+    function diceRoll(chance) {
+      const r = Math.floor(Math.random() * 10000);
+      if (wasmExports) {
+        return wasmExports.diceRoll(r, chance);
+      }
+      return (r % 100) <= chance ? 1 : 0;
+    }
+
+    function calcMeleeDamage(crit, atk, def) {
+      const safeDef = Math.max(1, def);
+      if (wasmExports) return wasmExports.calcMeleeDmg(crit ? 1 : 0, atk, safeDef);
+      return Math.trunc(((crit ? 4 : 2) * atk) / safeDef);
+    }
+
+    function calcMagicDamage(crit, mag, def) {
+      const safeDef = Math.max(1, def);
+      if (wasmExports) return wasmExports.calcMagicDmg(crit ? 1 : 0, mag, safeDef);
+      return Math.trunc(((crit ? 4 : 2) * mag) / safeDef) * 3;
+    }
+
+    function calcEnemyDamage(crit, eAtk, pDef) {
+      const safeDef = Math.max(1, pDef);
+      if (wasmExports) return wasmExports.calcEnemyDmg(crit ? 1 : 0, eAtk, safeDef);
+      return Math.trunc(eAtk / safeDef) * (crit ? 2 : 1);
+    }
+
+    // =========================================================================
+    // 3. WEBAUDIO RETRO 8-BIT SYNTHESIZER
+    // =========================================================================
+    let audioCtx = null;
+    let soundEnabled = true;
+
+    function playTone(freq, durationMs, type = "square", gainVal = 0.04, slideTo = null) {
+      if (!soundEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        if (slideTo) {
+          osc.frequency.exponentialRampToValueAtTime(slideTo, audioCtx.currentTime + durationMs / 1000);
+        }
+        gain.gain.setValueAtTime(gainVal, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + durationMs / 1000);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + durationMs / 1000);
+      } catch (_) {}
+    }
+
+    const sfx = {
+      blip: () => playTone(520 + Math.random() * 140, 22, "square", 0.02),
+      move: () => playTone(190, 45, "triangle", 0.04, 280),
+      select: () => playTone(660, 65, "square", 0.04, 880),
+      cancel: () => playTone(340, 65, "square", 0.04, 220),
+      hit: () => playTone(160, 110, "sawtooth", 0.06, 75),
+      magic: () => playTone(440, 90, "sine", 0.05, 880),
+      pickup: () => playTone(587, 90, "square", 0.05, 1174),
+      win: () => {
+        playTone(523, 90, "square", 0.05);
+        setTimeout(() => playTone(659, 90, "square", 0.05), 90);
+        setTimeout(() => playTone(784, 160, "square", 0.05), 180);
+      }
+    };
+
+    // =========================================================================
+    // 4. NCURSES GRAPHICS.H RENDERER ON 672x112 CANVAS
+    // =========================================================================
+    const canvas = document.getElementById("anuraCanvas");
+    const ctx = canvas.getContext("2d");
+    let fastText = false;
+
+    function clear() {
+      ctx.fillStyle = PALETTE[0];
+      ctx.fillRect(0, 0, 672, 112);
+    }
+
+    function refresh() {
+      updateHUD();
+    }
+
+    // Exact implementation of drawSprite from graphics.h
+    function drawSprite(sprite, x, y, invert) {
+      if (!sprite || !sprite.lines) return;
+      for (let i = 0; i < 16; i++) {
+        const line = sprite.lines[i];
+        for (let j = 0; j < 16; j++) {
+          const colorIndex = Number((line >> BigInt(j * 4)) & 15n);
+          if (colorIndex === 0) continue;
+          ctx.fillStyle = PALETTE[colorIndex] || PALETTE[2];
+          const px = invert ? (x + 46 - j * 3) : (x + j * 3);
+          const py = y + i;
+          ctx.fillRect(px, py, 3, 1);
+        }
+      }
+    }
+
+    function drawPlayer(player, x, y, invert, animationFrame) {
+      const frame = Math.max(0, Math.min(3, animationFrame));
+      drawSprite(player.sprites[frame], x, y, invert);
+    }
+
+    // Exact implementation of drawWorld from graphics.h
+    function drawWorld(world) {
+      let index = 0;
+      for (let i = 0; i < 7; i++) {
+        for (let j = 0; j < 14; j++) {
+          const tile = world[i][j];
+          if (tile > 20) {
+            switch (tile) {
+              case 22:
+                index = 0;
+                break;
+              case 27:
+                index = 7;
+                break;
+              case 28:
+                index = 8;
+                break;
+              case 25:
+              case 26: // Bridge exit tile right of tile 5
+                index = 5;
+                break;
+            }
+          } else {
+            index = tile;
+          }
+          drawSprite(ASSETS[index], j * 16 * 3, i * 16, 0);
+        }
+      }
+    }
+
+    // Exact implementation of drawLetter from graphics.h
+    function drawLetter(character, x, y) {
+      if (character === undefined) return;
+      ctx.fillStyle = PALETTE[2]; // Color index 2 (#000000)
+      for (let i = 0; i < 7; i++) {
+        for (let j = 0; j < 5; j++) {
+          if ((character >> BigInt(i * 5 + j)) & 1n) {
+            ctx.fillRect(x + j * 3, y + i, 3, 1);
+          }
+        }
+      }
+    }
+
+    // Exact implementation of drawBox from graphics.h:
+    // move(y0 + i, x0 + j * 3) for i in y0..y-1, j in x0..x-1
+    function drawBox(x0, y0, x, y) {
+      ctx.fillStyle = PALETTE[13]; // Color index 13 (#C2BA6E)
+      for (let i = y0; i < y; i++) {
+        for (let j = x0; j < x; j++) {
+          ctx.fillRect(x0 + j * 3, y0 + i, 3, 1);
+        }
+      }
+    }
+
+    // Sleep & Input Queue for ncurses getch()
+    let keyQueue = [];
+    let keyResolver = null;
+    let resetGeneration = 0;
+
+    function sleep(ms, gen = resetGeneration) {
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          if (gen !== resetGeneration) reject(new Error("RESET"));
+          else resolve();
+        }, ms);
+      });
+    }
+
+    function getch(gen = resetGeneration) {
+      return new Promise((resolve, reject) => {
+        if (gen !== resetGeneration) {
+          reject(new Error("RESET"));
+          return;
+        }
+        if (keyQueue.length > 0) {
+          resolve(keyQueue.shift());
+          return;
+        }
+        keyResolver = (k) => {
+          if (gen !== resetGeneration) reject(new Error("RESET"));
+          else resolve(k);
+        };
+      });
+    }
+
+    function pushKey(k) {
+      if (keyResolver) {
+        const r = keyResolver;
+        keyResolver = null;
+        r(k);
+      } else {
+        if (keyQueue.length < 8) keyQueue.push(k);
+      }
+    }
+
+    // Exact implementation of drawText from graphics.h
+    async function drawText(string, x, y, animate) {
+      let index = 0;
+      const initialX = x;
+      const gen = resetGeneration;
+      for (let i = 0; i < string.length; i++) {
+        const ch = string[i];
+        if (ch === "\n") {
+          y += 8;
+          x = initialX;
+          continue;
+        } else if (ch === " ") {
+          x += 8 * 2;
+          continue;
+        } else if (ch >= "a" && ch <= "z") {
+          index = ch.charCodeAt(0) - 97;
+        } else if (ch >= "A" && ch <= "Z") {
+          index = ch.charCodeAt(0) - 65;
+        } else if (ch >= "0" && ch <= "9") {
+          index = ch.charCodeAt(0) - 48 + 26;
+        } else {
+          switch (ch) {
+            case "/": index = 38; break;
+            case "?": index = 39; break;
+            case "!": index = 40; break;
+            case ".": index = 41; break;
+            case ",": index = 42; break;
+            case ")": index = 43; break;
+            case "(": index = 44; break;
+          }
+        }
+
+        x += 16;
+        drawLetter(CHARACTERS[index], x, y);
+        refresh();
+        if (animate && !fastText && keyQueue.length === 0) {
+          if (i % 2 === 0) sfx.blip();
+          await sleep(1000 / 30, gen);
+        }
+      }
+    }
+
+    async function drawBattleInfo(player, enemy) {
+      drawBox(25, 0, 185, 17);
+      const playerInfo = `${player.name || "sapo"} ${player.life}/${player.maxLife}`;
+      await drawText(playerInfo, 30 * 3, 5, 0);
+      const enemyInfo = `inimigo ${enemy.life}/${enemy.maxLife}`;
+      await drawText(enemyInfo, 115 * 3, 5, 0);
+    }
+
+    async function magicAnimation(player, enemy, miss) {
+      const gen = resetGeneration;
+      for (let i = 0; i < 5; i++) {
+        clear();
+        await drawBattleInfo(player, enemy);
+        drawSprite(player.sprites[2], 45 * 3, 30, 0);
+        if (enemy.maxLife === 50) {
+          drawSprite(ASSETS[10], 150 * 3, 20, 0);
+          drawSprite(ASSETS[9], 150 * 3, 36, 0);
+        } else {
+          drawSprite(ASSETS[3], 150 * 3, 30, 0);
+        }
+        drawBox(10, 40, 210, 87);
+        drawSprite(ASSETS[2], 65 * 3 + 48 * i, 30 + (miss * i * 5), 0);
+        sfx.magic();
+        refresh();
+        await sleep(100, gen);
+      }
+
+      clear();
+      await drawBattleInfo(player, enemy);
+      drawSprite(player.sprites[2], 45 * 3, 30, 0);
+      if (enemy.maxLife === 50) {
+        drawSprite(ASSETS[10], 150 * 3, 20, 0);
+        drawSprite(ASSETS[9], 150 * 3, 36, 0);
+      } else {
+        drawSprite(ASSETS[3], 150 * 3, 30, 0);
+      }
+      refresh();
+    }
+
+    // =========================================================================
+    // 5. CUTSCENES (graphics.h)
+    // =========================================================================
+    async function cutscene() {
+      setStateLabel("CUTSCENE");
+      const slides = [
+        ["voce acorda no meio de um pantano,", "e o lugar lhe parece familiar."],
+        ["o ar puro do lamacal te enche de", "determinacao. apos um longo coaxar,"],
+        ["voce chega a conclusao que todos", "os lugares deveriam ser pantanos. na"],
+        ["verdade, todos os seres deveriam ser", "sapos. voce sente que assim,e somente"],
+        ["assim, o mundo se tornaria um lugar", "melhor, haveria menos degradacao"],
+        ["ambiental, e mais respeito e cuidado", "com a natureza... O ecofascismo lhe"],
+        ["parece uma boa alternativa!", null],
+        ["com isso em mente, voce, ate entao um", "simples sapo cururu,decide dar inicio"],
+        ["a sua jornada de dominacao mundial.", "visando, e claro. a aniquilacao da"],
+        ["raca humana e de todos os nao sapos", "isso sim que e vida boa..."],
+        ["va ate a bruxa que se encontra", "na floresta, apos o lago, talvez"],
+        ["ela possa te indicar um caminho.", null]
+      ];
+
+      for (const [line1, line2] of slides) {
+        drawBox(10, 40, 210, 87);
+        await drawText(line1, 10 * 3, 90, 1);
+        if (line2) await drawText(line2, 10 * 3, 100, 1);
+        await getch();
+        sfx.select();
+      }
+    }
+
+    async function cutscene2() {
+      setStateLabel("ENCONTRO COM A BRUXA");
+      drawBox(1, 40, 210, 87);
+      drawSprite(ASSETS[11], 190 * 3, 87, 0);
+      await drawText("ola pequena criaturinha, o que te", 1 * 3, 90, 1);
+      await drawText("traz aqui?", 1 * 3, 100, 1);
+      await getch();
+
+      let choosing = 1;
+      let selected = 0;
+      while (choosing) {
+        drawBox(1, 40, 210, 87);
+        drawSprite(ASSETS[11], 190 * 3, 87, 0);
+        await drawText(" me arruma algo...", 1 * 3, 90, 0);
+        await drawText(" preciso de sua ajuda", 1 * 3, 100, 0);
+        drawLetter(CHARACTERS[37], 5 * 3, 90 + 10 * (selected % 2));
+        refresh();
+        const key = await getch();
+        switch (key) {
+          case "j":
+            sfx.select();
+            choosing = 0;
+            break;
+          case "w":
+          case "s":
+            sfx.blip();
+            selected = selected ? 0 : 1;
+            break;
+        }
+      }
+
+      if (!selected) {
+        drawBox(1, 40, 210, 87);
+        await drawText("arruma um plano maligno ai pra mim", 1 * 3, 90, 1);
+        await getch();
+        drawBox(1, 40, 210, 87);
+        drawSprite(ASSETS[11], 190 * 3, 87, 0);
+        await drawText("que petulancia!", 1 * 3, 90, 1);
+        await getch();
+        return 0;
+      } else {
+        drawBox(1, 40, 210, 87);
+        await drawText("senhora bruxa, boa tarde. preciso", 1 * 3, 90, 1);
+        await drawText("de ajuda para bolar um plano", 1 * 3, 100, 1);
+        await getch();
+        drawBox(10, 40, 210, 87);
+        await drawText("maligno contra a humanidade", 1 * 3, 90, 1);
+        await getch();
+        return 1;
+      }
+    }
+
+    async function cutscene3() {
+      drawBox(10, 40, 210, 87);
+      await drawText("jesus, maria e jose! um sapo", 10 * 3, 90, 0);
+      await drawText("magico", 10 * 3, 100, 0);
+      await getch();
+    }
+
+    // =========================================================================
+    // 6. COMBAT SYSTEM (combat.h)
+    // =========================================================================
+    async function levelUp(player) {
+      setStateLabel("SUBIU DE NÍVEL!");
+      sfx.win();
+      let choosing = 1;
+      let selected = 0;
+      while (choosing) {
+        clear();
+        await drawText("parabens, voce subiu de nivel!", 10 * 3, 20, 0);
+        await drawText("escolha uma habilidade para melhorar", 10 * 3, 30, 0);
+        await drawText("vida", 15 * 3, 40, 0);
+        await drawText("ataque", 15 * 3, 50, 0);
+        await drawText("defesa", 15 * 3, 60, 0);
+        await drawText("magia", 15 * 3, 70, 0);
+        drawLetter(CHARACTERS[37], 10 * 3, 40 + (selected * 10));
+        await drawText("pressione j para confirmar", 10 * 3, 90, 0);
+        refresh();
+
+        const key = await getch();
+        switch (key) {
+          case "j":
+            sfx.select();
+            choosing = 0;
+            switch (selected) {
+              case 0: player.maxLife += 3; break;
+              case 1: player.attack += 2; break;
+              case 2: player.defense += 2; break;
+              case 3: player.magic += 3; break;
+            }
+            break;
+          case "w":
+            sfx.blip();
+            selected = (selected === 0) ? 3 : selected - 1;
+            break;
+          case "s":
+            sfx.blip();
+            selected = (selected === 3) ? 0 : selected + 1;
+            break;
+        }
+      }
+    }
+
+    async function useItem(player, battleState) {
+      drawBox(10, 40, 210, 87);
+      if (player.potions === 0) {
+        await drawText("voce nao tem itens", 60 * 3, 90, 1);
+        await getch();
+        return;
+      }
+
+      let usingItem = 1;
+      let selected = 0;
+      while (usingItem) {
+        drawBox(10, 40, 210, 87);
+        await drawText("comer mosca?", 80 * 3, 90, 0);
+        await drawText("sim", 80 * 3, 100, 0);
+        await drawText("nao", 115 * 3, 100, 0);
+        drawLetter(CHARACTERS[37], 78 * 3 + 35 * (selected % 2) * 3, 100);
+        refresh();
+
+        const key = await getch();
+        switch (key) {
+          case "j":
+            if (selected % 2 === 0) {
+              sfx.pickup();
+              player.potions -= 1;
+              player.life = (player.life + 20 > player.maxLife) ? player.maxLife : player.life + 20;
+              battleState.turn = 0;
+              usingItem = 0;
+              drawBox(10, 40, 210, 87);
+              await drawText("voce comeu uma mosca", 35 * 3, 90, 1);
+              await getch();
+            } else {
+              usingItem = 0;
+            }
+            usingItem = 0;
+            break;
+          case "h":
+            sfx.cancel();
+            usingItem = 0;
+            break;
+          case "a":
+            sfx.blip();
+            selected = (selected + 1) % 2;
+            break;
+          case "d":
+            sfx.blip();
+            selected = (selected + 1) % 2;
+            break;
+        }
+      }
+    }
+
+    async function playerTurn(player, enemy, battleState, enemyType) {
+      let attacking = 1;
+      let selected = 0;
+      let miss = 0;
+      while (attacking) {
+        drawBox(10, 40, 210, 87);
+        await drawText("o que voce vai fazer?", 58 * 3, 85, 0);
+        await drawText("bater", 30 * 3, 100, 0);
+        await drawText("magia", 65 * 3, 100, 0);
+        await drawText("cegar", 100 * 3, 100, 0);
+        await drawText("intimidar", 135 * 3, 100, 0);
+        drawLetter(CHARACTERS[37], 28 * 3 + 35 * (selected % 4) * 3, 100);
+        refresh();
+
+        const key = await getch();
+        switch (key) {
+          case "j":
+            if (selected % 4 === 0) {
+              miss = diceRoll(10);
+              if (!miss) {
+                const crit = diceRoll(15);
+                enemy.life -= calcMeleeDamage(crit, player.attack, enemy.defense);
+                sfx.hit();
+              }
+              drawBox(10, 40, 210, 87);
+              await drawText("voce bateu no inimigo", 50 * 3, 90, 1);
+              await getch();
+            } else if (selected % 4 === 1) {
+              miss = diceRoll(10);
+              if (!miss) {
+                const crit = diceRoll(15);
+                enemy.life -= calcMagicDamage(crit, player.magic, enemy.defense);
+              }
+              await magicAnimation(player, enemy, miss);
+              drawBox(10, 40, 210, 87);
+              player.mana -= 1;
+              await drawText("voce feriu o inimigo usando\n   poderes sobrenaturais", 35 * 3, 90, 1);
+              await getch();
+            } else if (selected % 4 === 2) {
+              sfx.select();
+              enemy.accuracy = (enemy.accuracy > 5) ? enemy.accuracy - 10 : 5;
+              drawBox(10, 40, 210, 87);
+              await drawText("a visao do inimigo foi\n     comprometida", 50 * 3, 90, 1);
+              await getch();
+            } else if (selected % 4 === 3) {
+              sfx.select();
+              enemy.defense = (enemy.defense > 0) ? Math.max(1, enemy.defense - 2) : 1;
+              drawBox(10, 40, 210, 87);
+              await drawText("o inimigo esta com medo", 45 * 3, 90, 1);
+              await getch();
+            }
+
+            if (miss) {
+              sfx.cancel();
+              drawBox(10, 40, 210, 87);
+              await drawText("voce errou", 80 * 3, 90, 1);
+              await getch();
+            }
+
+            if (enemy.life <= 0) {
+              sfx.win();
+              drawBox(10, 40, 210, 87);
+              await drawText("o inimigo foi derrotado", 45 * 3, 90, 1);
+              await getch();
+              player.xp += (enemyType === 0) ? 50 : 100;
+              if (Math.trunc(player.xp / 100) > player.lvl) {
+                player.lvl += 1;
+                await levelUp(player);
+              }
+              battleState.fighting = 0;
+            }
+            battleState.turn = 0;
+            attacking = 0;
+            break;
+          case "h":
+            sfx.cancel();
+            attacking = 0;
+            selected = (selected + 3) % 4;
+            break;
+          case "a":
+            sfx.blip();
+            selected = (selected + 3) % 4;
+            break;
+          case "d":
+            sfx.blip();
+            selected = (selected + 1) % 4;
+            break;
+        }
+      }
+    }
+
+    async function fight(player, enemyType, text, textPos) {
+      setStateLabel(enemyType === 2 ? "CHEFE HUMANO" : "BATALHA");
+      const enemy = { life: 10, maxLife: 10, attack: 5, defense: 5, accuracy: 90 };
+      if (enemyType === 1) {
+        Object.assign(enemy, { life: 5, maxLife: 5, attack: 10, defense: 10, accuracy: 80 });
+      } else if (enemyType === 2) {
+        Object.assign(enemy, { life: 50, maxLife: 50, attack: 30, defense: 30, accuracy: 95 });
+      }
+
+      const drawBattleScene = async () => {
+        clear();
+        await drawBattleInfo(player, enemy);
+        drawSprite(player.sprites[2], 45 * 3, 30, 0);
+        if (enemyType === 2) {
+          drawSprite(ASSETS[10], 150 * 3, 20, 0);
+          drawSprite(ASSETS[9], 150 * 3, 36, 0);
+        } else {
+          drawSprite(ASSETS[3], 150 * 3, 30, 0);
+        }
+      };
+
+      await drawBattleScene();
+      drawBox(10, 40, 210, 87);
+      await drawText(text, textPos * 3, 90, 1);
+
+      const battleState = {
+        turn: diceRoll(50),
+        fighting: 1
+      };
+      await getch();
+
+      let selected = 0;
+      while (battleState.fighting) {
+        await drawBattleScene();
+        drawBox(10, 40, 210, 87);
+        await drawText("o que voce vai fazer", 58 * 3, 85, 0);
+        await drawText("lutar", 60 * 3, 100, 0);
+        await drawText("item ", 95 * 3, 100, 0);
+        await drawText("correr", 130 * 3, 100, 0);
+        drawLetter(CHARACTERS[37], 58 * 3 + 35 * (selected % 3) * 3, 100);
+        refresh();
+
+        if (battleState.turn) {
+          const key = await getch();
+          switch (key) {
+            case "j":
+              sfx.select();
+              if (selected % 3 === 0) {
+                await playerTurn(player, enemy, battleState, enemyType);
+              } else if (selected % 3 === 1) {
+                await useItem(player, battleState);
+              } else {
+                battleState.fighting = diceRoll(20);
+                if (!battleState.fighting) {
+                  drawBox(10, 40, 210, 87);
+                  await drawText("voce fugiu", 75 * 3, 85, 1);
+                  battleState.turn = 0;
+                  await getch();
+                } else {
+                  drawBox(10, 40, 210, 87);
+                  await drawText("a fuga falhou", 70 * 3, 85, 1);
+                  battleState.turn = 0;
+                  await getch();
+                }
+              }
+              break;
+            case "a":
+              sfx.blip();
+              selected = (selected === 0) ? 2 : selected - 1;
+              break;
+            case "d":
+              sfx.blip();
+              selected = (selected + 1) % 3;
+              break;
+          }
+        } else {
+          const miss = diceRoll(100 - enemy.accuracy);
+          if (miss) {
+            battleState.turn = 1;
+            drawBox(10, 40, 210, 87);
+            await drawText("o inimigo tentou bater em voce", 30 * 3, 90, 1);
+            await getch();
+            drawBox(10, 40, 210, 87);
+            await drawText("o inimigo errou", 65 * 3, 90, 1);
+            await getch();
+            continue;
+          }
+          sfx.hit();
+          drawBox(10, 40, 210, 87);
+          await drawText("voce foi ferido pelo inimigo", 35 * 3, 90, 1);
+          await getch();
+
+          const crit = diceRoll(15);
+          player.life -= calcEnemyDamage(crit, enemy.attack, player.defense);
+
+          if (player.life <= 0) {
+            drawBox(10, 40, 210, 87);
+            await drawText("voce morreu", 74 * 3, 90, 1);
+            await getch();
+            battleState.fighting = 0;
+          } else {
+            battleState.turn = 1;
+          }
+        }
+      }
+
+      if (enemyType === 2) {
+        if (player.life > 0) {
+          player.lvl = -2;
+        } else {
+          clear();
+          await drawText("voce nao foi forte o bastante para", 15 * 3, 40, 0);
+          await drawText("derrotar um humano, quem sabe", 15 * 3, 50, 0);
+          await drawText("se treinasse mais...", 15 * 3, 60, 0);
+          await getch();
+        }
+      }
+    }
+
+    // =========================================================================
+    // 7. WORLD LOGIC & IN-GAME MENU (logic.h)
+    // =========================================================================
+    async function statusScreen(player) {
+      clear();
+      await drawText(player.name || "sapo", 40 * 3, 20, 0);
+      await drawText("vida", 40 * 3, 30, 0);
+      await drawText(`${player.life}/${player.maxLife}`, 75 * 3, 30, 0);
+      await drawText("ataque", 40 * 3, 40, 0);
+      await drawText(`${player.attack}`, 80 * 3, 40, 0);
+      await drawText("defesa", 40 * 3, 50, 0);
+      await drawText(`${player.defense}`, 80 * 3, 50, 0);
+      await drawText("mana", 40 * 3, 60, 0);
+      await drawText(`${player.mana}`, 80 * 3, 60, 0);
+      await drawText("magia", 40 * 3, 70, 0);
+      await drawText(`${player.magic}`, 80 * 3, 70, 0);
+      await drawText("pressione qualquer tecla\n     para retornar", 40 * 3, 90, 0);
+      await getch();
+    }
+
+    async function itemScreen(player) {
+      clear();
+      await drawText("moscas", 40 * 3, 30, 0);
+      await drawText(`${player.potions}`, 75 * 3, 30, 0);
+      await drawText("pressione qualquer tecla\n     para retornar", 40 * 3, 90, 0);
+      await getch();
+    }
+
+    const SAVE_KEY = "anura_player_save_v1";
+
+    async function saveGame(player) {
+      const serializable = {
+        ...player,
+        sprites: undefined
+      };
+      try {
+        localStorage.setItem(SAVE_KEY, JSON.stringify(serializable));
+      } catch (_) {}
+      sfx.pickup();
+      clear();
+      await drawText("jogo salvo com sucesso", 50 * 3, 10, 0);
+      await getch();
+    }
+
+    async function menuScreen(gameState, player) {
+      setStateLabel("MENU (K)");
+      let isOnMenu = 1;
+      let selected = 0;
+      while (isOnMenu) {
+        drawWorld(screens[player.curScreen].world);
+        drawPlayer(player, player.x, player.y, gameState.reverse, (!gameState.isNotMoving ? 1 : 0) + gameState.isMagic);
+        drawBox(100, 10, 150, 60);
+        await drawText("status", 140 * 3, 25, 0);
+        await drawText("item", 140 * 3, 35, 0);
+        await drawText("salvar", 140 * 3, 45, 0);
+        await drawText("inicio", 140 * 3, 55, 0);
+        drawLetter(CHARACTERS[37], 138 * 3, 25 + ((selected % 4) * 10));
+        refresh();
+
+        const key = await getch();
+        switch (key) {
+          case "j":
+            sfx.select();
+            if (selected % 4 === 0) {
+              await statusScreen(player);
+            } else if (selected % 4 === 1) {
+              await itemScreen(player);
+            } else if (selected % 4 === 2) {
+              await saveGame(player);
+            } else {
+              gameState.isOnTitle = 1;
+            }
+            isOnMenu = 0;
+            break;
+          case "k":
+          case "h":
+            sfx.cancel();
+            isOnMenu = 0;
+            break;
+          case "w":
+            sfx.blip();
+            selected = (selected + 3) % 4;
+            break;
+          case "s":
+            sfx.blip();
+            selected = (selected + 1) % 4;
+            break;
+        }
+      }
+    }
+
+    function seekNewPos(player) {
+      const world = screens[player.curScreen].world;
+      for (let i = 0; i < 7; i++) {
+        for (let j = 0; j < 14; j++) {
+          if (world[i][j] === 22 || world[i][j] === 26) {
+            player.mapX = j + 1;
+            player.mapY = i + 1;
+            player.x = 16 * 3 * j;
+            player.y = 16 * i;
+            return;
+          }
+        }
+      }
+    }
+
+    async function distributeStats(player) {
+      setStateLabel("HABILIDADES");
+      player.mana = 20;
+      let totalStats = 5;
+      let distributing = 1;
+      let selected = 0;
+      const stats = [0, 0, 0, 0];
+
+      while (distributing) {
+        clear();
+        await drawText("distribua suas habilidades", 10 * 3, 20, 0);
+        await drawText("vida    1", 10 * 3, 30, 0);
+        await drawText("ataque ", 10 * 3, 40, 0);
+        await drawText("defesa ", 10 * 3, 50, 0);
+        await drawText("magia  ", 10 * 3, 60, 0);
+        drawLetter(CHARACTERS[26 + stats[0]], 63 * 3, 30);
+        drawLetter(CHARACTERS[30 + stats[1]], 62 * 3, 40);
+        drawLetter(CHARACTERS[30 + stats[2]], 62 * 3, 50);
+        drawLetter(CHARACTERS[30 + stats[3]], 62 * 3, 60);
+        drawLetter(CHARACTERS[37], 52 * 3, 30 + (selected * 10));
+        await drawText("pontos disponiveis ", 10 * 3, 70, 0);
+        drawLetter(CHARACTERS[26 + totalStats], 117 * 3, 70);
+
+        if (totalStats === 0) {
+          await drawText("pressione j para confirmar", 10 * 3, 90, 0);
+        }
+        refresh();
+
+        const key = await getch();
+        switch (key) {
+          case "j":
+            if (totalStats === 0) {
+              sfx.win();
+              distributing = 0;
+            }
+            break;
+          case "w":
+            sfx.blip();
+            selected = (selected === 0) ? 3 : selected - 1;
+            break;
+          case "s":
+            sfx.blip();
+            selected = (selected === 3) ? 0 : selected + 1;
+            break;
+          case "a":
+            if (stats[selected] !== 0) {
+              sfx.blip();
+              stats[selected] -= 1;
+              totalStats++;
+            }
+            break;
+          case "d":
+            if (totalStats > 0) {
+              sfx.blip();
+              stats[selected] += 1;
+              totalStats--;
+            }
+            break;
+        }
+
+        player.life = 10 + stats[0];
+        player.maxLife = 10 + stats[0];
+        player.attack = 5 + stats[1];
+        player.defense = 5 + stats[2];
+        player.magic = 5 + stats[3];
+      }
+
+      clear();
+      await drawText("apos receber poderes da bruxa,", 20 * 3, 40, 0);
+      await drawText("voce entao partiu para sua jornada", 20 * 3, 50, 0);
+      await drawText("de extincao da humanidade", 20 * 3, 60, 0);
+      await getch();
+      clear();
+      await drawText("quando sentir que esta pronto", 20 * 3, 40, 0);
+      await drawText("aperte f", 20 * 3, 50, 0);
+      await getch();
+    }
+
+    async function canMove(world, x, y, direction, player, gameState) {
+      const canBattle = !gameState.isNotMoving;
+      switch (direction) {
+        case 1: x++; break; // >
+        case 2: y++; break; // v
+        case 3: x--; break; // <
+        case 4: y--; break; // ^
+      }
+
+      if (x === 0 || y === 0 || x === 15 || y === 8) {
+        return 0;
+      } else if (world[y - 1][x - 1] !== 1) {
+        if (diceRoll(25) && canBattle && player.curScreen >= 2) {
+          await fight(player, diceRoll(50), "uma cobra selvagem apareceu", 35);
+        }
+
+        const tile = world[y - 1][x - 1];
+        if (tile === 27 || tile === 28) {
+          const survived = await cutscene2();
+          if (!survived) {
+            player.lvl = -1;
+            return 0;
+          }
+          await distributeStats(player);
+          world[y - 1][x - 1] = 0;
+          switch (direction) {
+            case 1:
+              player.x -= 8 * 3;
+              player.mapX -= 1;
+              break;
+            case 2:
+              player.y -= 8;
+              player.mapY -= 1;
+              break;
+            case 3:
+              player.x += 8 * 3;
+              player.mapX += 1;
+              break;
+            case 4:
+              player.y += 8;
+              player.mapY += 1;
+              break;
+          }
+          player.curScreen += 1;
+          return 0;
+        } else if (tile === 26 || tile === 22) {
+          if (gameState.reverse) {
+            player.curScreen = Math.max(0, player.curScreen - 1);
+          } else {
+            player.curScreen = Math.min(2, player.curScreen + 1);
+          }
+          seekNewPos(player);
+        }
+
+        return 1;
+      } else {
+        return 0;
+      }
+    }
+
+    function spawn(world) {
+      if (diceRoll(70)) return;
+      const i = Math.floor(Math.random() * 7);
+      const j = Math.floor(Math.random() * 14);
+      if (Math.floor(Math.random() * 100) >= 50) {
+        world[i][j] = (world[i][j] === 0) ? 4 : world[i][j];
+      } else {
+        world[i][j] = (world[i][j] === 0) ? 6 : world[i][j];
+      }
+    }
+
+    async function playerMove(gameState, player, world) {
+      const gen = resetGeneration;
+      let turned = 0;
+      if (gameState.isNotMoving) {
+        setStateLabel("EXPLORAÇÃO");
+        gameState.key = await getch();
+      }
+
+      spawn(world);
+
+      switch (gameState.key) {
+        case "w":
+          if (await canMove(world, player.mapX, player.mapY, 4, player, gameState)) {
+            if (gameState.isNotMoving) sfx.move();
+            player.y -= 8;
+            if (!gameState.isNotMoving) player.mapY -= 1;
+          }
+          break;
+        case "s":
+          if (await canMove(world, player.mapX, player.mapY, 2, player, gameState)) {
+            if (gameState.isNotMoving) sfx.move();
+            player.y += 8;
+            if (!gameState.isNotMoving) player.mapY += 1;
+          }
+          break;
+        case "a":
+          if (gameState.reverse) {
+            if (await canMove(world, player.mapX, player.mapY, 3, player, gameState)) {
+              if (gameState.isNotMoving) sfx.move();
+              player.x -= 8 * 3;
+              if (!gameState.isNotMoving) player.mapX -= 1;
+            }
+          } else {
+            sfx.blip();
+            gameState.reverse = 1;
+            turned = 1;
+          }
+          break;
+        case "d":
+          if (!gameState.reverse) {
+            if (await canMove(world, player.mapX, player.mapY, 1, player, gameState)) {
+              if (gameState.isNotMoving) sfx.move();
+              player.x += 8 * 3;
+              if (!gameState.isNotMoving) player.mapX += 1;
+            }
+          } else {
+            sfx.blip();
+            gameState.reverse = 0;
+            turned = 1;
+          }
+          break;
+        case "k":
+          await menuScreen(gameState, player);
+          break;
+        case "f":
+          if (player.mana > 0) {
+            sfx.select();
+            await cutscene3();
+            await fight(player, 2, "voce encontrou um humano", 35);
+          }
+          break;
+        default:
+          if (gameState.isNotMoving) return;
+      }
+
+      if (!turned && gameState.key !== "k" && gameState.key !== "f") {
+        gameState.isNotMoving = gameState.isNotMoving ? 0 : 1;
+      }
+
+      const activeWorld = screens[player.curScreen].world;
+      const curTile = activeWorld[player.mapY - 1]?.[player.mapX - 1];
+      if (curTile === 6) {
+        sfx.pickup();
+        activeWorld[player.mapY - 1][player.mapX - 1] = 0;
+        player.potions += 1;
+      } else if (curTile === 4) {
+        sfx.pickup();
+        activeWorld[player.mapY - 1][player.mapX - 1] = 0;
+        player.xp += 50;
+        drawWorld(activeWorld);
+        drawPlayer(player, player.x, player.y, gameState.reverse, (!gameState.isNotMoving ? 1 : 0) + gameState.isMagic);
+        drawBox(10, 40, 210, 87);
+        await drawText("voce salvou um girino", 10 * 3, 90, 0);
+        await getch();
+      }
+
+      await sleep(1000 / 30, gen);
+    }
+
+    // =========================================================================
+    // 8. TITLE SCREEN, STARTING SCREEN & NAME SCREEN (mainMenu.h)
+    // =========================================================================
+    let isNamingMode = false;
+
+    async function nameScreen(player) {
+      setStateLabel("DIGITE SEU NOME");
+      isNamingMode = true;
+      let isOnName = 1;
+      let curLetter = 0;
+      let index = player.name.length;
+
+      try {
+        while (isOnName) {
+          clear();
+          await drawText("a lenda de anura", 65 * 3, 10, 0);
+          await drawText("diga seu nome", 10 * 3, 40, 0);
+          curLetter = ((curLetter % 37) + 37) % 37;
+
+          drawLetter(CHARACTERS[curLetter], 15 * 3 + (index * 8 * 2), 50);
+          await drawText(player.name, 9 * 3, 50, 0);
+          refresh();
+
+          const key = await getch();
+          if (key && key.startsWith(" DIRECT:")) {
+            const typed = key.slice(8);
+            if (typed === "ENTER") {
+              if (player.name.length === 0) player.name = "cururu";
+              sfx.select();
+              isOnName = 0;
+              break;
+            } else if (typed === "BACKSPACE") {
+              if (index > 0) {
+                sfx.cancel();
+                index--;
+                const ch = player.name[index];
+                curLetter = (ch >= "a" && ch <= "z") ? (ch.charCodeAt(0) - 97) : (ch.charCodeAt(0) - 48 + 26);
+                player.name = player.name.slice(0, index);
+              }
+            } else if (index < 8) {
+              sfx.blip();
+              player.name += typed;
+              index++;
+              curLetter = (index < 8) ? 0 : 36;
+            }
+            continue;
+          }
+
+          switch (key) {
+            case "j": {
+              sfx.select();
+              let letter = "";
+              if (curLetter < 26) {
+                letter = String.fromCharCode(97 + curLetter);
+              } else if (curLetter < 36) {
+                letter = String.fromCharCode(48 + curLetter - 26);
+              } else {
+                if (player.name.length === 0) player.name = "cururu";
+                isOnName = 0;
+                break;
+              }
+              player.name += letter;
+              index++;
+              curLetter = (index < 8) ? 0 : 36;
+              break;
+            }
+            case "h":
+              if (index === 0) break;
+              sfx.cancel();
+              index--;
+              {
+                const ch = player.name[index];
+                curLetter = (ch >= "a" && ch <= "z") ? (ch.charCodeAt(0) - 97) : (ch.charCodeAt(0) - 48 + 26);
+                player.name = player.name.slice(0, index);
+              }
+              break;
+            case "w":
+              if (index < 8) {
+                sfx.blip();
+                curLetter = (curLetter === 0) ? 36 : curLetter - 1;
+              }
+              break;
+            case "s":
+              if (index < 8) {
+                sfx.blip();
+                curLetter++;
+              }
+              break;
+          }
+        }
+      } finally {
+        isNamingMode = false;
+      }
+    }
+
+    async function loadSave(player, gameState, startState, start, isSavedGame) {
+      if (!isSavedGame) {
+        Object.assign(player, createFreshPlayer());
+        screens = cloneScreens();
+        return;
+      }
+      let raw = null;
+      try {
+        raw = localStorage.getItem(SAVE_KEY);
+      } catch (_) {}
+      if (raw) {
+        try {
+          const data = JSON.parse(raw);
+          const fresh = createFreshPlayer();
+          Object.assign(player, fresh, data, { sprites: fresh.sprites });
+          if (start) {
+            gameState.isOnTitle = 0;
+            startState.isStarting = 0;
+          }
+          return;
+        } catch (_) {}
+      }
+      clear();
+      await drawText("nenhum salvamento encontrado", 35 * 3, 10, 0);
+      await drawText("pressione qualquer tecla\n     para retornar", 40 * 3, 80, 0);
+      await getch();
+    }
+
+    async function recordsScreen() {
+      clear();
+      let raw = null;
+      try { raw = localStorage.getItem(SAVE_KEY); } catch (_) {}
+      if (raw) {
+        const d = JSON.parse(raw);
+        await drawText("ultimo sapo salvo", 55 * 3, 20, 0);
+        await drawText(`${d.name || "cururu"}   nv ${d.lvl || 1}   xp ${d.xp || 0}`, 45 * 3, 45, 0);
+      } else {
+        await drawText("nenhum salvamento encontrado", 35 * 3, 30, 0);
+      }
+      await drawText("pressione qualquer tecla\n     para retornar", 40 * 3, 80, 0);
+      await getch();
+    }
+
+    async function startingScreen(player, gameState) {
+      setStateLabel("INICIAR JOGO");
+      const startState = { isStarting: 1 };
+      let selected = 0;
+      while (startState.isStarting) {
+        clear();
+        await drawText("a lenda de anura", 65 * 3, 10, 0);
+        await drawText("novo jogo", 80 * 3, 60, 0);
+        await drawText("continuar", 80 * 3, 70, 0);
+        await drawText("recordes", 80 * 3, 80, 0);
+        drawLetter(CHARACTERS[37], 75 * 3, 60 + ((selected % 3) * 10));
+        refresh();
+
+        const key = await getch();
+        switch (key) {
+          case "j":
+            sfx.select();
+            if (selected % 3 === 0) {
+              await loadSave(player, gameState, startState, 0, false);
+              player.name = "";
+              await nameScreen(player);
+              gameState.isOnTitle = 0;
+              gameState.shouldPlay = 1;
+              startState.isStarting = 0;
+            } else if (selected % 3 === 1) {
+              await loadSave(player, gameState, startState, 1, true);
+              gameState.shouldPlay = 0;
+            } else {
+              await recordsScreen();
+            }
+            break;
+          case "h":
+            sfx.cancel();
+            startState.isStarting = 0;
+            break;
+          case "w":
+            sfx.blip();
+            selected = (selected === 0) ? 2 : selected - 1;
+            break;
+          case "s":
+            sfx.blip();
+            selected = (selected + 1) % 3;
+            break;
+        }
+      }
+    }
+
+    async function creditsScreen() {
+      setStateLabel("CRÉDITOS");
+      clear();
+      await drawText("maria eduarda oliveira", 40 * 3, 30, 0);
+      await drawText("rafael vieira da silva", 40 * 3, 40, 0);
+      await drawText("pressione qualquer tecla\n     para retornar", 40 * 3, 80, 0);
+      await getch();
+    }
+
+    async function controlsScreen() {
+      setStateLabel("CONTROLES");
+      clear();
+      await drawText("wasd  andar", 40 * 3, 30, 0);
+      await drawText("j     confirmar", 40 * 3, 40, 0);
+      await drawText("h     cancelar", 40 * 3, 50, 0);
+      await drawText("k     menu", 40 * 3, 60, 0);
+      await drawText("pressione qualquer tecla\n     para retornar", 40 * 3, 80, 0);
+      await getch();
+    }
+
+    async function titleScreen(player, gameState) {
+      if (!gameState.isOnTitle) return;
+      setStateLabel("TÍTULO");
+
+      clear();
+      await drawText("a lenda de anura", 65 * 3, 10, 0);
+      await drawText("iniciar", 80 * 3, 60, 0);
+      await drawText("creditos", 80 * 3, 70, 0);
+      await drawText("controles", 80 * 3, 80, 0);
+      await drawText("sair", 80 * 3, 90, 0);
+      await drawText("wasd", 0, 100, 0);
+      await drawText("j", 200 * 3, 100, 0);
+      drawLetter(CHARACTERS[37], 75 * 3, 60 + ((gameState.selected % 4) * 10));
+      refresh();
+
+      const key = await getch();
+      gameState.key = key;
+
+      switch (key) {
+        case "j":
+          sfx.select();
+          if (gameState.selected % 4 === 0) {
+            await startingScreen(player, gameState);
+          } else if (gameState.selected % 4 === 1) {
+            await creditsScreen();
+          } else if (gameState.selected % 4 === 2) {
+            await controlsScreen();
+          } else {
+            gameState.mainLoop = 0;
+          }
+          gameState.selected = 0;
+          break;
+        case "w":
+          sfx.blip();
+          gameState.selected = (gameState.selected + 3) % 4;
+          break;
+        case "s":
+          sfx.blip();
+          gameState.selected = (gameState.selected + 1) % 4;
+          break;
+      }
+    }
+
+    // =========================================================================
+    // 9. MAIN GAME LOOP (game.c)
+    // =========================================================================
+    let screens = cloneScreens();
+    let currentPlayer = createFreshPlayer();
+    let currentGameState = null;
+
+    function setStateLabel(txt) {
+      const el = document.getElementById("stateLabel");
+      if (el) el.textContent = txt ? `[${txt}]` : "";
+    }
+
+    function updateHUD() {
+      const p = currentPlayer;
+      if (!p) return;
+      document.getElementById("hudName").textContent = p.name ? p.name.toUpperCase() : "—";
+      document.getElementById("hudLife").textContent = `${Math.max(0, p.life)}/${p.maxLife}`;
+      document.getElementById("hudMana").textContent = `${p.mana}`;
+      document.getElementById("hudStats").textContent = `${p.attack} / ${p.defense} / ${p.magic}`;
+      document.getElementById("hudXp").textContent = `Lv.${Math.max(1, p.lvl)} (${p.xp} XP)`;
+      document.getElementById("hudFlies").textContent = `${p.potions}`;
+      const areas = ["Pântano (1/3)", "Lago da Bruxa (2/3)", "Floresta (3/3)"];
+      document.getElementById("hudArea").textContent = areas[p.curScreen] || areas[0];
+
+      const bossBtn = document.getElementById("btnBossF");
+      if (bossBtn) {
+        if (p.mana > 0 && currentGameState && !currentGameState.isOnTitle) {
+          bossBtn.classList.add("ready");
+        } else {
+          bossBtn.classList.remove("ready");
+        }
+      }
+    }
+
+    async function runGameInstance() {
+      screens = cloneScreens();
+      currentPlayer = createFreshPlayer();
+      const player = currentPlayer;
+
+      const gameState = {
+        mainLoop: 1,
+        reverse: 0,
+        isNotMoving: 1,
+        isOnTitle: 1,
+        isMagic: 0,
+        selected: 0,
+        key: "",
+        ending: 0,
+        shouldPlay: 1
+      };
+      currentGameState = gameState;
+
+      while (gameState.mainLoop) {
+        await titleScreen(player, gameState);
+        if (!gameState.mainLoop) break;
+        if (gameState.isOnTitle) continue;
+
+        if (player.mana > 0) {
+          gameState.isMagic = 2;
+        }
+
+        drawWorld(screens[player.curScreen].world);
+        drawPlayer(
+          player,
+          player.x,
+          player.y,
+          gameState.reverse,
+          (!gameState.isNotMoving ? 1 : 0) + gameState.isMagic
+        );
+        refresh();
+
+        if (player.mana === 0 && player.xp === 0 && gameState.shouldPlay) {
+          await cutscene();
+          gameState.shouldPlay = 0;
+          drawWorld(screens[player.curScreen].world);
+          drawPlayer(
+            player,
+            player.x,
+            player.y,
+            gameState.reverse,
+            (!gameState.isNotMoving ? 1 : 0) + gameState.isMagic
+          );
+          refresh();
+        }
+
+        await playerMove(gameState, player, screens[player.curScreen].world);
+
+        if (player.mana > 0) {
+          gameState.isMagic = 2;
+        }
+
+        if (player.life <= 0) {
+          gameState.mainLoop = 0;
+          gameState.ending = 1;
+        } else if (player.mana < 0) {
+          gameState.mainLoop = 0;
+          gameState.ending = 2;
+        } else if (player.lvl === -1) {
+          gameState.mainLoop = 0;
+          gameState.ending = 3;
+        } else if (player.lvl === -2) {
+          gameState.mainLoop = 0;
+          gameState.ending = 4;
+        }
+      }
+
+      clear();
+      setStateLabel(`FINAL ${gameState.ending || ""}`);
+      switch (gameState.ending) {
+        case 1:
+          await drawText("fim de jogo", 75 * 3, 10, 0);
+          await drawText("voce morreu", 75 * 3, 40, 0);
+          break;
+        case 2:
+          await drawText("fim de jogo", 75 * 3, 10, 0);
+          await drawText("voce perdeu seus poderes magicos", 15 * 3, 40, 0);
+          await drawText("e se tornou um sapo comum novamente", 15 * 3, 50, 0);
+          break;
+        case 3:
+          await drawText("fim de jogo", 75 * 3, 10, 0);
+          await drawText("a bruxa, utilizando sua varinha,", 15 * 3, 40, 0);
+          await drawText("lanca lhe um feitico fatal. e", 15 * 3, 50, 0);
+          await drawText("assim termina sua historia,", 15 * 3, 60, 0);
+          await drawText("pequeno sapo. talvez da proxima", 15 * 3, 70, 0);
+          await drawText("seja melhor ser mais educado.", 15 * 3, 80, 0);
+          break;
+        case 4:
+          sfx.win();
+          await drawText("fim de jogo", 75 * 3, 10, 0);
+          await drawText("em seu coracao, se mantem a", 15 * 3, 30, 0);
+          await drawText("conviccao de que todos os humanos", 15 * 3, 40, 0);
+          await drawText("devem pagar pelos seus erros", 15 * 3, 50, 0);
+          await drawText("contra a natureza. esse foi so o", 15 * 3, 60, 0);
+          await drawText("primeiro passo de muitos que voce", 15 * 3, 70, 0);
+          await drawText("ainda iria dar na extincao de toda", 15 * 3, 80, 0);
+          await drawText("a humanidade.", 15 * 3, 100, 0);
+          break;
+        default:
+          await drawText("ate a proxima!", 65 * 3, 45, 0);
+          break;
+      }
+      refresh();
+      await getch();
+    }
+
+    async function bootSupervisor() {
+      await initWasm();
+      while (true) {
+        try {
+          await runGameInstance();
+        } catch (err) {
+          if (err && err.message === "RESET") {
+            continue;
+          }
+          console.error(err);
+        }
+      }
+    }
+
+    // =========================================================================
+    // 10. KEYBOARD & TOUCH/CLICK BINDINGS (WITH PARENT WINDOW FORWARDING)
+    // =========================================================================
+    function handleTerminalKeyInput(k, rawEvent = null) {
+      if (!k) return;
+
+      // Direct typing convenience when on Name Screen
+      if (isNamingMode) {
+        if (k === "Enter") {
+          if (rawEvent) rawEvent.preventDefault();
+          pushKey(" DIRECT:ENTER");
+          return;
+        }
+        if (k === "Backspace") {
+          if (rawEvent) rawEvent.preventDefault();
+          pushKey(" DIRECT:BACKSPACE");
+          return;
+        }
+        if (k === "ArrowUp") {
+          if (rawEvent) rawEvent.preventDefault();
+          pushKey("w");
+          return;
+        }
+        if (k === "ArrowDown") {
+          if (rawEvent) rawEvent.preventDefault();
+          pushKey("s");
+          return;
+        }
+        if (/^[a-zA-Z0-9]$/.test(k)) {
+          if (rawEvent) rawEvent.preventDefault();
+          pushKey(" DIRECT:" + k.toLowerCase());
+          return;
+        }
+      }
+
+      const lower = k.toLowerCase();
+      let mapped = null;
+      if (["w", "a", "s", "d", "j", "h", "k", "f"].includes(lower)) {
+        mapped = lower;
+      } else if (k === "ArrowUp") mapped = "w";
+      else if (k === "ArrowDown") mapped = "s";
+      else if (k === "ArrowLeft") mapped = "a";
+      else if (k === "ArrowRight") mapped = "d";
+      else if (k === "Enter" || k === " ") mapped = "j";
+      else if (k === "Escape" || k === "Backspace") mapped = "h";
+
+      if (mapped) {
+        if (rawEvent) rawEvent.preventDefault();
+        const btn = document.querySelector(`.ctrl-btn[data-key="${mapped}"]`);
+        if (btn) {
+          btn.classList.add("pressed");
+          setTimeout(() => btn.classList.remove("pressed"), 120);
+        }
+        pushKey(mapped);
+      }
+    }
+
+    window.addEventListener("keydown", (e) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      handleTerminalKeyInput(e.key, e);
+    });
+
+    window.addEventListener("message", (e) => {
+      if (e.data && e.data.type === "TERMINAL_KEY") {
+        handleTerminalKeyInput(e.data.key, null);
+      }
+    });
+
+    document.addEventListener("mousedown", () => {
+      window.focus();
+      document.body?.focus();
+    });
+
+    window.addEventListener("load", () => {
+      window.focus();
+      document.body?.focus();
+    });
+
+    document.querySelectorAll(".ctrl-btn[data-key]").forEach((btn) => {
+      const key = btn.getAttribute("data-key");
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        btn.blur();
+        window.focus();
+        pushKey(key);
+      });
+    });
+
+    document.getElementById("btnScanlines").addEventListener("click", (e) => {
+      const ov = document.getElementById("scanlinesOverlay");
+      ov.classList.toggle("hidden");
+      e.currentTarget.textContent = ov.classList.contains("hidden") ? "CRT: OFF" : "CRT: ON";
+    });
+
+    document.getElementById("btnAudio").addEventListener("click", (e) => {
+      soundEnabled = !soundEnabled;
+      e.currentTarget.textContent = soundEnabled ? "Som: ON" : "Som: OFF";
+    });
+
+    document.getElementById("btnFastText").addEventListener("click", (e) => {
+      fastText = !fastText;
+      e.currentTarget.textContent = fastText ? "Texto: Instantâneo" : "Texto: Normal";
+    });
+
+    document.getElementById("btnReset").addEventListener("click", () => {
+      resetGeneration++;
+      keyQueue = [];
+      if (keyResolver) {
+        const r = keyResolver;
+        keyResolver = null;
+        r("");
+      }
+    });
+
+    bootSupervisor();
+  </script>
+</body>
+</html>
