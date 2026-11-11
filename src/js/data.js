@@ -69,6 +69,12 @@ const EXECUTABLE_PROJECTS = {
         title: 'Show do Milhão — Quiz Web Game',
         url: 'demos/show-do-milhao/index.html',
         mode: 'Web Game'
+    },
+    'chess-bot.md': {
+        id: 'chess-bot',
+        title: 'Chess Bot — Go WebAssembly Engine',
+        url: 'demos/chess-bot/index.html',
+        mode: 'Go WebAssembly'
     }
 };
 

@@ -1,7 +1,8 @@
 # Chess Bot
 
-> **Categoria:** Projeto Pessoal & Jogos  
-> **Repositório:** [github.com/ravsil/chess-bot](https://github.com/ravsil/chess-bot)
+> **Categoria:** Projeto Pessoal  
+> **Repositório:** [github.com/ravsil/chess-bot](https://github.com/ravsil/chess-bot)  
+> **Executar:** [▶ Jogar Chess Bot no Navegador](#run:chess-bot.md)
 
 **Chess Bot** é um motor de xadrez (*chess engine*) e servidor web desenvolvido do zero em **Go**, acompanhado de uma interface gráfica interativa para navegador. O projeto implementa toda a representação de estado do tabuleiro via **Bitboards de 64 bits**, geração completa de movimentos legais e uma inteligência artificial adversária baseada no algoritmo **Minimax com Poda Alfa-Beta**.
 
